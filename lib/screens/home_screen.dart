@@ -22,3 +22,6 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+//토끼 부분 피그마 화면 캡쳐해서 배경으로 사용
+//방우현
