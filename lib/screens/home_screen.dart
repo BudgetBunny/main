@@ -1,15 +1,29 @@
 import 'package:flutter/material.dart';
+import 'chart_screen.dart';
+import 'goal_screen.dart';
 
-void main() {
-  runApp(MyApp());
-}
 
-class MyApp extends StatefulWidget {
+
+class MyApp extends StatelessWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      initialRoute: '/',
+      routes: {
+        '/': (context) => HomeScreen(),
+        '/chart': (context) => ChartScreen(), // chart 화면으로 이동
+        '/home': (context) => HomeScreen(), // 입출금 화면으로 이동
+        '/goal': (context) => GoalScreen(), // 목표 관리 화면으로 이동
+      },
+    );
+  }
+}
+class HomeScreen extends StatefulWidget {
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   String _selectedTab = '입출금';
 
@@ -22,14 +36,14 @@ class _MyAppState extends State<MyApp> {
             // 배경 이미지
             Positioned.fill(
               child: Image.asset(
-                'assets/homeScreen.png',
+                'assets/images/homeScreen.png',
                 fit: BoxFit.fitHeight,
               ),
             ),
             // 주요 UI
             Column(
               children: [
-                SizedBox(height: 35.0),
+
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
@@ -52,6 +66,7 @@ class _MyAppState extends State<MyApp> {
                     ),
                   ),
                   centerTitle: true,
+                  automaticallyImplyLeading: false,
                   actions: [
                     IconButton(
                       icon: Icon(Icons.menu, color: Color(0xFF676966)),
@@ -64,9 +79,9 @@ class _MyAppState extends State<MyApp> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _buildTabItem('통계'),
-                      _buildTabItem('입출금'),
-                      _buildTabItem('관리'),
+                      _buildTabItem('통계', '/chart'),
+                      _buildTabItem('입출금', '/home'), // 입출금 화면으로 연결
+                      _buildTabItem('관리', '/goal'),
                     ],
                   ),
                 ),
@@ -336,8 +351,6 @@ class _MyAppState extends State<MyApp> {
                     ],
                   ),
                 ),
-
-
               ],
             ),
           ],
@@ -347,13 +360,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   // 탭 버튼 생성 함수
-  Widget _buildTabItem(String label) {
+  Widget _buildTabItem(String label, String route) {
     bool isSelected = _selectedTab == label;
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedTab = label;
         });
+        Navigator.pushNamed(context, route); // 클릭 시 화면 이동
       },
       child: Container(
         decoration: BoxDecoration(

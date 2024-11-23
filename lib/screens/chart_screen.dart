@@ -1,28 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'home_screen.dart';
+import 'goal_screen.dart';
 
-void main() {
-  runApp(MyApp());
-}
+
 
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: MyHomePage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => ChartScreen(),
+        '/chart': (context) => ChartScreen(),
+        '/home': (context) => HomeScreen(),
+        '/goal': (context) => GoalScreen(),
+      },
     );
   }
 }
-
-class MyHomePage extends StatefulWidget {
+class ChartScreen extends StatefulWidget {
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _ChartScreenState createState() => _ChartScreenState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _ChartScreenState extends State<ChartScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  String _selectedTab = '통계';
 
   @override
   Widget build(BuildContext context) {
@@ -31,13 +37,55 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage('assets/background.png'),
+              image: AssetImage('assets/images/background_chart.png'),
               fit: BoxFit.cover,
             ),
           ),
           child: Column(
             children: [
-              SizedBox(height: 210),
+              AppBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                title: Text(
+                  'BudgetBunny',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color(0xFF676966),
+                    fontSize: 22,
+                    fontFamily: 'Roboto',
+                    fontWeight: FontWeight.w400,
+                    height: 0.06,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 3.5),
+                        blurRadius: 5.0,
+                        color: Colors.black38,
+                      ),
+                    ],
+                  ),
+                ),
+                centerTitle: true,
+                automaticallyImplyLeading: false,
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.menu, color: Color(0xFF676966)),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildTabItem('통계', '/chart'),
+                    _buildTabItem('입출금', '/home'), // 입출금 화면으로 연결
+                    _buildTabItem('관리', '/goal'),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+              // 캘린더
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
@@ -71,6 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               SizedBox(height: 20),
+              // LineChart 그래프
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
                 child: Container(
@@ -139,6 +188,39 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabItem(String label, String route) {
+    bool isSelected = _selectedTab == label;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedTab = label;
+        });
+        Navigator.pushNamed(context, route); // 클릭 시 화면 이동
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              width: 3.0,
+              color: isSelected ? Colors.white : Colors.transparent,
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10.0),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 18.0,
+              fontWeight: FontWeight.w500,
+              color: isSelected ? Colors.white : Colors.white,
+            ),
           ),
         ),
       ),
