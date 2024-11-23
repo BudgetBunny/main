@@ -29,7 +29,7 @@ class _MyAppState extends State<MyApp> {
             // 주요 UI
             Column(
               children: [
-                SizedBox(height: 35.0),
+                SizedBox(height: 6.0),
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
