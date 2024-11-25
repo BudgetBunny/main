@@ -68,14 +68,47 @@ class _HomeScreenState extends State<HomeScreen> {
                   centerTitle: true,
                   automaticallyImplyLeading: false,
                   actions: [
-                    IconButton(
+                    PopupMenuButton<String>(
                       icon: Icon(Icons.menu, color: Color(0xFF676966)),
-                      onPressed: () {},
+                      onSelected: (String choice) {
+                        if (choice == '마이페이지') {
+                          Navigator.pushNamed(context, '/mypage');
+                        } else if (choice == '로그아웃') {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                              title: Text('로그아웃'),
+                              content: Text('정말 로그아웃하시겠습니까?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('취소'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pushNamedAndRemoveUntil(
+                                        context, '/', (route) => false);
+                                  },
+                                  child: Text('확인'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      },
+                      itemBuilder: (BuildContext context) {
+                        return {'마이페이지', '로그아웃'}.map((String choice) {
+                          return PopupMenuItem<String>(
+                            value: choice,
+                            child: Text(choice),
+                          );
+                        }).toList();
+                      },
                     ),
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 17.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -88,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 7.0),
+                    padding: const EdgeInsets.only(top: 10.0),
                     child: Text.rich(
                       TextSpan(
                         children: [

@@ -67,9 +67,42 @@ class _ChartScreenState extends State<ChartScreen> {
                 centerTitle: true,
                 automaticallyImplyLeading: false,
                 actions: [
-                  IconButton(
+                  PopupMenuButton<String>(
                     icon: Icon(Icons.menu, color: Color(0xFF676966)),
-                    onPressed: () {},
+                    onSelected: (String choice) {
+                      if (choice == '마이페이지') {
+                        Navigator.pushNamed(context, '/mypage'); // 마이페이지로 이동
+                      } else if (choice == '로그아웃') {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            title: Text('로그아웃'),
+                            content: Text('정말 로그아웃하시겠습니까?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
+                                child: Text('취소'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/', (route) => false); // 로그아웃 후 메인 화면으로 이동
+                                },
+                                child: Text('확인'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return {'마이페이지', '로그아웃'}.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
                   ),
                 ],
               ),

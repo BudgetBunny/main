@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
 import 'login_screen.dart'; // 로그인 화면 import
 
 class JoinScreen extends StatefulWidget {
@@ -15,39 +17,88 @@ class _JoinScreenState extends State<JoinScreen> {
   String _nicknameErrorMessage = "";
   String _idErrorMessage = "";
   String _passwordErrorMessage = "";
+  bool _isLoading = false; // 로딩 상태 추가
 
-  void _validateAndSubmit() {
+  // Firebase Auth 인스턴스
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<void> _validateAndSubmit() async {
     setState(() {
       _nicknameErrorMessage = "";
       _idErrorMessage = "";
       _passwordErrorMessage = "";
-
-      // 닉네임 필드 검사
-      if (_nicknameController.text.isEmpty) {
-        _nicknameErrorMessage = "닉네임을 입력해주세요.";
-      }
-
-      // 이메일 형식 검사
-      _idErrorMessage = RegExp(
-          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-          .hasMatch(_idController.text)
-          ? ""
-          : "아이디는 이메일 형식이어야 합니다.";
-
-      // 비밀번호 길이 및 문자 포함 검사
-      if (_passwordController.text.length < 8 ||
-          _passwordController.text.length > 16 ||
-          !_passwordController.text.contains(RegExp(r'[A-Za-z]'))) {
-        _passwordErrorMessage = "비밀번호는 8~16자의 영문 대/소문자.";
-      }
-
-      // 모든 입력이 유효하면 회원가입 완료 메시지 출력 후 로그인 화면으로 이동
-      if (_nicknameErrorMessage.isEmpty &&
-          _idErrorMessage.isEmpty &&
-          _passwordErrorMessage.isEmpty) {
-        _showSignUpCompleteDialog();
-      }
     });
+
+    // 닉네임 검사
+    if (_nicknameController.text.isEmpty) {
+      setState(() {
+        _nicknameErrorMessage = "닉네임을 입력해주세요.";
+      });
+      return;
+    }
+
+    // 이메일 형식 검사
+    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        .hasMatch(_idController.text)) {
+      setState(() {
+        _idErrorMessage = "아이디는 이메일 형식이어야 합니다.";
+      });
+      return;
+    }
+
+    // 비밀번호 검사
+    if (_passwordController.text.length < 8 ||
+        _passwordController.text.length > 16 ||
+        !_passwordController.text.contains(RegExp(r'[A-Za-z]'))) {
+      setState(() {
+        _passwordErrorMessage = "비밀번호는 8~16자의 영문 대/소문자.";
+      });
+      return;
+    }
+
+    // Firebase에 회원가입 처리
+    try {
+      setState(() {
+        _isLoading = true; // 로딩 상태 시작
+      });
+
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: _idController.text,
+        password: _passwordController.text,
+      );
+
+      // Firestore에 닉네임 저장
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'nickname': _nicknameController.text,
+        'email': _idController.text,
+      });
+
+      // 사용자 추가 데이터 (닉네임 등) Firebase Firestore나 Realtime Database에 저장 가능
+
+      setState(() {
+        _isLoading = false; // 로딩 상태 종료
+      });
+
+      _showSignUpCompleteDialog();
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false; // 로딩 상태 종료
+      });
+
+      String errorMessage;
+      if (e.code == 'email-already-in-use') {
+        errorMessage = "이미 사용 중인 이메일입니다.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "유효하지 않은 이메일 형식입니다.";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "비밀번호가 너무 약합니다.";
+      } else {
+        errorMessage = "회원가입 중 오류가 발생했습니다.";
+      }
+
+      _showErrorDialog(errorMessage);
+    }
   }
 
   void _showSignUpCompleteDialog() {
@@ -65,6 +116,22 @@ class _JoinScreenState extends State<JoinScreen> {
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
               ); // 로그인 화면으로 이동
             },
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('오류'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
             child: const Text('확인'),
           ),
         ],
@@ -126,7 +193,9 @@ class _JoinScreenState extends State<JoinScreen> {
                     errorMessage: _passwordErrorMessage,
                   ),
                   SizedBox(height: size.height * 0.05),
-                  SizedBox(
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -157,48 +226,42 @@ class _JoinScreenState extends State<JoinScreen> {
     );
   }
 
-  Widget _buildTextFieldWithError(BuildContext context, {
-    required String label,
-    required TextEditingController controller,
-    required String errorMessage,
-    bool obscureText = false,
-  }) {
+  Widget _buildTextFieldWithError(
+      BuildContext context, {
+        required String label,
+        required TextEditingController controller,
+        required String errorMessage,
+        bool obscureText = false,
+      }) {
     final size = MediaQuery.of(context).size;
 
-    // 닉네임 입력 필드만 가로폭 조정
-    final isNicknameField = label == '닉네임';
-    final fieldWidth = isNicknameField ? size.width * 0.5 : size.width * 0.7;
+    final fieldWidth = size.width * 0.8;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              label,
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: size.width * 0.04,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        if (errorMessage.isNotEmpty)
+          Padding(
+            padding: EdgeInsets.only(top: 5),
+            child: Text(
+              errorMessage,
               style: TextStyle(
-                color: Colors.black,
-                fontSize: size.width * 0.04,
-                fontWeight: FontWeight.w500,
+                color: Colors.red,
+                fontSize: size.width * 0.036,
               ),
             ),
-            if (errorMessage.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.only(left: size.width * 0.03),
-                child: Text(
-                  errorMessage,
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: size.width * 0.036,
-                  ),
-                ),
-              ),
-          ],
-        ),
+          ),
         SizedBox(height: size.height * 0.01),
         SizedBox(
-          width: fieldWidth, // 필드 너비를 조건에 따라 설정
+          width: fieldWidth,
           child: TextField(
             controller: controller,
             obscureText: obscureText,
