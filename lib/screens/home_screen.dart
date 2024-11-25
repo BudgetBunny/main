@@ -43,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // 주요 UI
             Column(
               children: [
-                SizedBox(height: 6.0),
+
                 AppBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
@@ -75,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(vertical: 17.0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -88,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Align(
                   alignment: Alignment.topCenter,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 7.0),
+                    padding: const EdgeInsets.only(top: 10.0),
                     child: Text.rich(
                       TextSpan(
                         children: [
@@ -351,8 +351,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
-
-
               ],
             ),
           ],

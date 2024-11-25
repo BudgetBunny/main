@@ -49,7 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
           content: Text('환영합니다, $id님!'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context); // 팝업 닫기
+                Navigator.pushReplacementNamed(context, '/home'); // HomeScreen으로 이동
+              },
               child: const Text('확인'),
             ),
           ],
