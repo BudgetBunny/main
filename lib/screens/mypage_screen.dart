@@ -47,9 +47,6 @@ class MyPageScreen extends StatelessWidget {
               // 프로필 아이콘 대체
               _buildProfileIcon(size),
               SizedBox(height: size.height * 0.03),
-              SizedBox(height: size.height * 0.03),
-              SizedBox(height: size.height * 0.03),
-              SizedBox(height: size.height * 0.06),
 
               // Firestore에서 데이터 가져오기
               StreamBuilder<DocumentSnapshot>(
@@ -81,12 +78,13 @@ class MyPageScreen extends StatelessWidget {
                       _buildInfoRow(size, '닉네임', nickname, '닉네임 재설정'),
                       SizedBox(height: size.height * 0.03),
                       _buildInfoRow(size, '아이디', email, '아이디 재설정'),
+                      SizedBox(height: size.height * 0.03),
+                      _buildPasswordResetRow(context, size),
+                      SizedBox(height: size.height * 0.05),
                     ],
                   );
                 },
               ),
-
-              SizedBox(height: size.height * 0.05),
               // 하단 마스코트 이미지
               _buildMascot(size),
               // 하단 추가 이미지
