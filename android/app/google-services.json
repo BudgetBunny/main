@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "542371924030",
+    "project_id": "budgetbunny-e2613",
+    "storage_bucket": "budgetbunny-e2613.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542371924030:android:311aa3582fb894aaf6e96f",
+        "android_client_info": {
+          "package_name": "com.example.budgetbunny"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDic37MpnP3H8dyC9TxwLNUEcNZROYQ2LA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
