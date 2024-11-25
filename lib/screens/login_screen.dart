@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
 import 'join_screen.dart'; // 회원가입 화면 import
 
 void main() {
@@ -29,7 +30,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = "";
 
-  void _login() {
+  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth 인스턴스
+
+  void _login() async {
     String id = _idController.text.trim();
     String password = _passwordController.text.trim();
 
@@ -42,23 +45,50 @@ class _LoginScreenState extends State<LoginScreen> {
         _errorMessage = "";
       });
 
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('로그인 성공'),
-          content: Text('환영합니다, $id님!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // 팝업 닫기
-                Navigator.pushReplacementNamed(context, '/home'); // HomeScreen으로 이동
-              },
-              child: const Text('확인'),
-            ),
-          ],
-        ),
-      );
+      try {
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+          email: id,
+          password: password,
+        );
+        // 로그인 성공
+        _showSuccessDialog(userCredential.user?.email ?? "사용자");
+      } on FirebaseAuthException catch (e) {
+        // Firebase 인증 에러 처리
+        if (e.code == 'user-not-found') {
+          setState(() {
+            _errorMessage = "존재하지 않는 사용자입니다.";
+          });
+        } else if (e.code == 'wrong-password') {
+          setState(() {
+            _errorMessage = "비밀번호가 틀렸습니다.";
+          });
+        } else {
+          setState(() {
+            _errorMessage = "로그인 중 오류가 발생했습니다: ${e.message}";
+          });
+        }
+      }
     }
+  }
+
+  void _showSuccessDialog(String userId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('로그인 성공'),
+        content: Text('환영합니다, $userId님!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // 팝업 닫기
+              // 홈 화면으로 이동 (이곳에 실제 홈 화면을 연결해야 함)
+              Navigator.pushReplacementNamed(context, '/home');
+            },
+            child: const Text('확인'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _goToSignUp() {
@@ -105,8 +135,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: size.height * 0.03),
                   _buildLabel('비밀번호', size),
                   _buildTextField(size, controller: _passwordController, obscureText: true),
-                  // 여기에서 간격 추가
-                  SizedBox(height: size.height * 0.06), // 비밀번호 필드와 버튼 사이 간격 조정
+                  // 간격 추가
+                  SizedBox(height: size.height * 0.06),
                   if (_errorMessage.isNotEmpty)
                     Padding(
                       padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
