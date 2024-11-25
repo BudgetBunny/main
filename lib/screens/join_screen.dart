@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
 import 'login_screen.dart'; // 로그인 화면 import
 
@@ -20,6 +21,7 @@ class _JoinScreenState extends State<JoinScreen> {
 
   // Firebase Auth 인스턴스
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> _validateAndSubmit() async {
     setState(() {
@@ -65,6 +67,12 @@ class _JoinScreenState extends State<JoinScreen> {
         email: _idController.text,
         password: _passwordController.text,
       );
+
+      // Firestore에 닉네임 저장
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'nickname': _nicknameController.text,
+        'email': _idController.text,
+      });
 
       // 사용자 추가 데이터 (닉네임 등) Firebase Firestore나 Realtime Database에 저장 가능
 

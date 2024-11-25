@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'passwordreset_screen.dart'; // 비밀번호 재설정 화면 import
 
 class MyPageScreen extends StatelessWidget {
@@ -45,13 +47,45 @@ class MyPageScreen extends StatelessWidget {
               // 프로필 아이콘 대체
               _buildProfileIcon(size),
               SizedBox(height: size.height * 0.03),
-              // 닉네임, 아이디, 비밀번호 변경 섹션
-              _buildInfoRow(size, '닉네임', '', '닉네임 재설정'),
               SizedBox(height: size.height * 0.03),
-              _buildInfoRow(size, '아이디', '', '아이디 재설정'),
               SizedBox(height: size.height * 0.03),
-              // 비밀번호 재설정 버튼
-              _buildPasswordResetRow(context, size),
+              SizedBox(height: size.height * 0.06),
+
+              // Firestore에서 데이터 가져오기
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser!.uid)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  print('Snapshot: ${snapshot.connectionState}');
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return CircularProgressIndicator();
+                  }
+
+                  if (snapshot.hasError) {
+                    return Text('오류: ${snapshot.error}');
+                  }
+
+                  if (!snapshot.hasData || !snapshot.data!.exists) {
+                    return Text('정보를 불러오는 중 오류가 발생했습니다.');
+                  }
+
+                  var userData = snapshot.data!;
+                  print('User Data: ${userData.data()}'); // Firestore 데이터 출력
+                  String nickname = userData['nickname'] ?? '닉네임 없음';
+                  String email = userData['email'] ?? '이메일 없음';
+
+                  return Column(
+                    children: [
+                      _buildInfoRow(size, '닉네임', nickname, '닉네임 재설정'),
+                      SizedBox(height: size.height * 0.03),
+                      _buildInfoRow(size, '아이디', email, '아이디 재설정'),
+                    ],
+                  );
+                },
+              ),
+
               SizedBox(height: size.height * 0.05),
               // 하단 마스코트 이미지
               _buildMascot(size),

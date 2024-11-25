@@ -13,9 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Firebase 초기화
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp();
 
   // 앱 실행
   runApp(MyApp());
