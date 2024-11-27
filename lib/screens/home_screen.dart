@@ -402,8 +402,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       )
-
-
                     ],
                   ),
                 ),
@@ -423,8 +421,21 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _selectedTab = label;
         });
-        Navigator.pushNamed(context, route); // 클릭 시 화면 이동
+
+        // /goal 경로일 때만 arguments 전달
+        if (route == '/goal') {
+          Navigator.pushNamed(
+            context,
+            '/goal',
+            arguments: {
+              'totalAmount': _totalPlusAmount - _totalMinusAmount,
+            },
+          );
+        } else {
+          Navigator.pushNamed(context, route); // 다른 경로로 이동
+        }
       },
+
       child: Container(
         decoration: BoxDecoration(
           border: Border(

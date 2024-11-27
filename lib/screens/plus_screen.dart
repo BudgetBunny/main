@@ -37,9 +37,6 @@ class PlusScreen extends StatelessWidget {
                   TextField(
                     controller: _controller, // 입력한 값을 가져오기 위해 컨트롤러 사용
                     keyboardType: TextInputType.number, // 숫자 입력 전용 키보드
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly, // 숫자만 입력 가능
-                    ],
                     decoration: InputDecoration(
                       filled: true,
                       fillColor: Colors.white, // 입력 필드 배경색
@@ -60,16 +57,46 @@ class PlusScreen extends StatelessWidget {
                   ElevatedButton(
                     onPressed: () {
                       String enteredAmount = _controller.text; // 입력한 값 가져오기
-                      if (enteredAmount.isNotEmpty) {
-                        Navigator.pop(context, enteredAmount); // 입력 값을 전달하며 이전 화면으로 돌아감
-                      } else {
-                        // 빈 값일 경우 에러 메시지 표시
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('금액을 입력해주세요!'),
-                            duration: Duration(seconds: 2),
-                          ),
+                      if (enteredAmount.isEmpty) {
+                        // 빈 값일 경우 AlertDialog로 에러 메시지 표시
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('입력 오류'),
+                              content: Text('금액을 입력해주세요!'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // 다이얼로그 닫기
+                                  },
+                                  child: Text('확인'),
+                                ),
+                              ],
+                            );
+                          },
                         );
+                      } else if (int.tryParse(enteredAmount) == null) {
+                        // 숫자가 아닐 경우 AlertDialog로 에러 메시지 표시
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text('입력 오류'),
+                              content: Text('금액은 숫자만 입력할 수 있습니다.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(); // 다이얼로그 닫기
+                                  },
+                                  child: Text('확인'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      } else {
+                        Navigator.pop(context, enteredAmount); // 입력 값을 전달하며 이전 화면으로 돌아감
                       }
                     },
                     style: ElevatedButton.styleFrom(

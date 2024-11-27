@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'chart_screen.dart';
 import 'home_screen.dart';
 
-
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -11,27 +9,72 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => GoalScreen(),
+        '/goal': (context) => GoalScreen(),
         '/chart': (context) => ChartScreen(),
         '/home': (context) => HomeScreen(),
-        '/goal': (context) => GoalScreen(),
       },
     );
   }
 }
+
 class GoalScreen extends StatefulWidget {
   @override
   _GoalScreenState createState() => _GoalScreenState();
 }
 
 class _GoalScreenState extends State<GoalScreen> {
-  final ScrollController _scrollController = ScrollController();
+  String _backgroundImage = 'assets/images/background_chart.png'; // 초기 배경 이미지
+
+  // 목표 금액을 위한 controller와 focusNode
+  final TextEditingController _goalAmountController = TextEditingController();
+  final FocusNode _goalFocusNode = FocusNode();
   String _selectedTab = '관리';
-  int _count = 0; // 카운트 변수
-  String _backgroundImage = 'assets/images/goalSuccess.png'; // 초기 배경 이미지
+  int _totalAmount = 0;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Navigator에서 전달된 데이터를 받아옴
+    final arguments = ModalRoute.of(context)?.settings.arguments as Map?;
+    if (arguments != null) {
+      setState(() {
+        _totalAmount = arguments['totalAmount'] ?? 0;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _goalAmountController.dispose();
+    _goalFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('입력 오류'),
+          content: Text(message),
+          actions: <Widget>[
+            TextButton(
+              child: Text('확인'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // 배경 이미지
@@ -44,7 +87,6 @@ class _GoalScreenState extends State<GoalScreen> {
           // 주요 UI
           Column(
             children: [
-
               // 투명 AppBar
               AppBar(
                 backgroundColor: Colors.transparent,
@@ -109,9 +151,8 @@ class _GoalScreenState extends State<GoalScreen> {
                   ),
                 ],
               ),
-              // Tab 메뉴
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
+                padding: const EdgeInsets.symmetric(vertical: 17.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -121,52 +162,76 @@ class _GoalScreenState extends State<GoalScreen> {
                   ],
                 ),
               ),
-              Expanded(
-                child: ListView(
-                  controller: _scrollController,
+              SizedBox(height: 40,),
+              // 목표 금액 입력 필드 및 확인 버튼
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              '현재 카운트: $_count',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 20),
-                            ElevatedButton(
-                              onPressed: _incrementCounter,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.yellow,
-                              ),
-                              child: Text(
-                                '카운트 증가',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            ElevatedButton(
-                              onPressed: _decrementCounter,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.yellow,
-                              ),
-                              child: Text(
-                                '카운트 감소',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
+                    Expanded(
+                      child: TextField(
+                        controller: _goalAmountController,
+                        focusNode: _goalFocusNode,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          hintText: "목표 금액 설정",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 15,
+                            horizontal: 20,
+                          ),
                         ),
+                        style: TextStyle(fontSize: 30, color: Colors.black),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        String goalAmount = _goalAmountController.text.trim();
+                        if (goalAmount.isEmpty) {
+                          _showErrorDialog('목표 금액을 입력해주세요.');
+                        } else {
+                          final numericValue = num.tryParse(goalAmount);
+                          if (numericValue == null) {
+                            _showErrorDialog('금액은 숫자만 입력 가능합니다.');
+                          } else {
+                            double enteredGoalAmount = numericValue.toDouble();
+
+                            // 만원 단위 체크 (10000으로 나누어 떨어지는지 확인)
+                            if (enteredGoalAmount % 10000 != 0) {
+                              _showErrorDialog('목표 금액은 10000원 단위입니다.');
+                            } else {
+                              double difference = enteredGoalAmount - _totalAmount;
+                              if (difference >= 0) {
+                                setState(() {
+                                  _backgroundImage = 'assets/images/goalSuccess.png';
+                                });
+                              } else {
+                                setState(() {
+                                  _backgroundImage = 'assets/images/goalFailed.png';
+                                });
+                              }
+                              // 키보드를 내리기 위해 포커스를 해제합니다.
+                              FocusScope.of(context).unfocus();
+                            }
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                      child: Text(
+                        '확인',
+                        style: TextStyle(fontSize: 30, color: Colors.white),
                       ),
                     ),
                   ],
@@ -178,7 +243,6 @@ class _GoalScreenState extends State<GoalScreen> {
       ),
     );
   }
-
   Widget _buildTabItem(String label, String route) {
     bool isSelected = _selectedTab == label;
     return GestureDetector(
@@ -211,23 +275,4 @@ class _GoalScreenState extends State<GoalScreen> {
       ),
     );
   }
-
-  void _incrementCounter() {
-    setState(() {
-      _count++;
-      if (_count > 5) {
-        _backgroundImage = 'assets/images/goalFailed.png'; // 배경 이미지 변경
-      }
-    });
-  }
-
-  void _decrementCounter() {
-    setState(() {
-      _count--;
-      if (_count <= 5) {
-        _backgroundImage = 'assets/images/goalSuccess.png'; // 배경 이미지 변경
-      }
-    });
-  }
-
 }
