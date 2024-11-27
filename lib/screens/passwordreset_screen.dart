@@ -16,6 +16,9 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
+  bool _currentPasswordVisible = false;
+  bool _newPasswordVisible = false;
+
   Future<void> _validateAndChangePassword() async {
     setState(() {
       _currentPasswordErrorMessage = "";
@@ -166,7 +169,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                               SizedBox(height: size.height * 0.01),
                               TextField(
                                 controller: _currentPasswordController,
-                                obscureText: true,
+                                obscureText: !_currentPasswordVisible,
                                 decoration: InputDecoration(
                                   hintText: '현재 비밀번호',
                                   border: OutlineInputBorder(
@@ -174,6 +177,18 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                                   ),
                                   filled: true,
                                   fillColor: Colors.white.withOpacity(0.8),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _currentPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _currentPasswordVisible = !_currentPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
                               ),
                               if (_currentPasswordErrorMessage.isNotEmpty)
@@ -199,7 +214,7 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                               SizedBox(height: size.height * 0.01),
                               TextField(
                                 controller: _newPasswordController,
-                                obscureText: true,
+                                obscureText: !_newPasswordVisible,
                                 decoration: InputDecoration(
                                   hintText: '새 비밀번호',
                                   border: OutlineInputBorder(
@@ -207,6 +222,18 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
                                   ),
                                   filled: true,
                                   fillColor: Colors.white.withOpacity(0.8),
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _newPasswordVisible
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _newPasswordVisible = !_newPasswordVisible;
+                                      });
+                                    },
+                                  ),
                                 ),
                               ),
                               if (_newPasswordErrorMessage.isNotEmpty)
