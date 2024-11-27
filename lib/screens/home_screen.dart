@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
 import 'chart_screen.dart';
 import 'goal_screen.dart';
-
+import 'plus_screen.dart';
+import 'minus_screen.dart';
 
 
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       initialRoute: '/',
       routes: {
         '/': (context) => HomeScreen(),
-        '/chart': (context) => ChartScreen(), // chart 화면으로 이동
-        '/home': (context) => HomeScreen(), // 입출금 화면으로 이동
-        '/goal': (context) => GoalScreen(), // 목표 관리 화면으로 이동
+        '/home': (context) => HomeScreen(),
+        '/chart': (context) => ChartScreen(),
+        '/goal': (context) => GoalScreen(),
+        '/plus': (context) => PlusScreen(),
+        '/minus': (context) => MinusScreen(),
       },
     );
   }
@@ -26,10 +30,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   String _selectedTab = '입출금';
+  int _totalPlusAmount = 0;
+  int _totalMinusAmount = 0;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Stack(
           children: [
@@ -216,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             TextSpan(
-                              text: '-405000 원',
+                              text: '${_totalPlusAmount - _totalMinusAmount} 원',
                               style: TextStyle(
                                 color: Color(0xFF676866),
                                 fontSize: 26,
@@ -261,28 +268,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 120,
                                 height: 100,
                                 child: TextButton(
-                                  onPressed: () {
-                                    print('입금금액 버튼 눌림');
+                                  onPressed: () async {
+                                    final plusResult = await Navigator.pushNamed(context, '/plus');
+                                    if (plusResult != null) {
+                                      setState(() {
+                                        _totalPlusAmount += int.tryParse(plusResult as String) ?? 0;
+                                      });
+                                    }
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shape: CircleBorder(),
-                                    padding: EdgeInsets.all(20),
+                                    padding: EdgeInsets.all(10),
                                   ),
-                                  child: Text(
-                                    '+450000',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w600,
-                                      height: 0.06,
-                                      letterSpacing: -0.36,
+                                  child: FittedBox( // 텍스트가 넘치지 않도록 자동으로 크기 조정
+                                    fit: BoxFit.scaleDown, // 텍스트 크기를 자동으로 줄여줌
+                                    child: Text(
+                                      '+$_totalPlusAmount 원', // 총 입금 금액 표시
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w600,
+                                        height: 1, // 텍스트의 높이
+                                        letterSpacing: -0.36,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              )
                             ],
                           ),
                           SizedBox(width: 42),
@@ -307,28 +322,36 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 120,
                                 height: 100,
                                 child: TextButton(
-                                  onPressed: () {
-                                    print('지출금액 버튼 눌림');
+                                  onPressed: () async {
+                                    final minusResult = await Navigator.pushNamed(context, '/minus');
+                                    if (minusResult != null) {
+                                      setState(() {
+                                        _totalMinusAmount += int.tryParse(minusResult as String) ?? 0;
+                                      });
+                                    }
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shape: CircleBorder(),
-                                    padding: EdgeInsets.all(20),
+                                    padding: EdgeInsets.all(10),
                                   ),
-                                  child: Text(
-                                    '-855000',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w600,
-                                      height: 0.06,
-                                      letterSpacing: -0.36,
+                                  child: FittedBox( // 텍스트가 넘치지 않도록 자동으로 크기 조정
+                                    fit: BoxFit.scaleDown, // 텍스트 크기를 자동으로 줄여줌
+                                    child: Text(
+                                      '-$_totalMinusAmount 원', // 총 입금 금액 표시
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 18,
+                                        fontFamily: 'Inter',
+                                        fontWeight: FontWeight.w600,
+                                        height: 1, // 텍스트의 높이
+                                        letterSpacing: -0.36,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                              )
                             ],
                           ),
                         ],
