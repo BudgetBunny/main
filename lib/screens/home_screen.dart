@@ -1,8 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'chart_screen.dart';
 import 'goal_screen.dart';
 import 'plus_screen.dart';
 import 'minus_screen.dart';
+
 
 
 class MyApp extends StatelessWidget {
@@ -27,6 +30,13 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+String _getMonthName(int month) {
+  const monthNames = [
+    '1월', '2월', '3월', '4월', '5월', '6월',
+    '7월', '8월', '9월', '10월', '11월', '12월'
+  ];
+  return monthNames[month - 2];
+}
 class _HomeScreenState extends State<HomeScreen> {
   final ScrollController _scrollController = ScrollController();
   String _selectedTab = '입출금';
@@ -206,38 +216,64 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 70.0),
-                  child: Column(
-                    children: [
-                      Text.rich(
-                        TextSpan(
+                  child: FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator(); // 로딩 표시
+                      }
+                      if (snapshot.hasData && snapshot.data != null) {
+                        final data = snapshot.data!;
+                        final remainingBalance = data['account_balance'] ?? 0; // Firestore에서 잔액 가져오기
+                        final currentMonth = DateTime.now().month; // 현재 월 가져오기
+                        final monthName = _getMonthName(currentMonth); // 월 이름 변환 함수 호출
+
+                        return Column(
                           children: [
-                            TextSpan(
-                              text: '10월 총 소비\n',
-                              style: TextStyle(
-                                color: Color(0xFF676866),
-                                fontSize: 20,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 4.5,
-                                letterSpacing: -0.40,
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${monthName} 남은 잔액\n', // 이번 달 이름 표시
+                                    style: TextStyle(
+                                      color: Color(0xFF676866),
+                                      fontSize: 20,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w400,
+                                      height: 4.5,
+                                      letterSpacing: -0.40,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$remainingBalance 원', // 남은 잔액 표시
+                                    style: TextStyle(
+                                      color: Color(0xFF297E1C), // 초록색 텍스트
+                                      fontSize: 26,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w400,
+                                      height: 0.04,
+                                      letterSpacing: -0.52,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            TextSpan(
-                              text: '${_totalPlusAmount - _totalMinusAmount} 원',
-                              style: TextStyle(
-                                color: Color(0xFF676866),
-                                fontSize: 26,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 0.04,
-                                letterSpacing: -0.52,
-                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
+                        );
+                      }
+                      return Text(
+                        '오류 발생',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -281,23 +317,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                     shape: CircleBorder(),
                                     padding: EdgeInsets.all(10),
                                   ),
-                                  child: FittedBox( // 텍스트가 넘치지 않도록 자동으로 크기 조정
-                                    fit: BoxFit.scaleDown, // 텍스트 크기를 자동으로 줄여줌
-                                    child: Text(
-                                      '+$_totalPlusAmount 원', // 총 입금 금액 표시
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontFamily: 'Inter',
-                                        fontWeight: FontWeight.w600,
-                                        height: 1, // 텍스트의 높이
-                                        letterSpacing: -0.36,
-                                      ),
-                                    ),
+                                  child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasData && snapshot.data != null) {
+                                        final data = snapshot.data!.data();
+                                        final plusAccount = data?['plus_account'] ?? 0;
+                                        return FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '+$plusAccount 원',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1,
+                                              letterSpacing: -0.36,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        'Error',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                           SizedBox(width: 42),
@@ -335,23 +395,47 @@ class _HomeScreenState extends State<HomeScreen> {
                                     shape: CircleBorder(),
                                     padding: EdgeInsets.all(10),
                                   ),
-                                  child: FittedBox( // 텍스트가 넘치지 않도록 자동으로 크기 조정
-                                    fit: BoxFit.scaleDown, // 텍스트 크기를 자동으로 줄여줌
-                                    child: Text(
-                                      '-$_totalMinusAmount 원', // 총 입금 금액 표시
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontFamily: 'Inter',
-                                        fontWeight: FontWeight.w600,
-                                        height: 1, // 텍스트의 높이
-                                        letterSpacing: -0.36,
-                                      ),
-                                    ),
+                                  child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasData && snapshot.data != null) {
+                                        final data = snapshot.data!.data();
+                                        final minusAccount = data?['minus_account'] ?? 0;
+                                        return FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '-$minusAccount 원',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1,
+                                              letterSpacing: -0.36,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        'Error',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ],
