@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore 사용을 위한 import
-import 'package:firebase_auth/firebase_auth.dart'; // 사용자 인증
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MinusScreen extends StatelessWidget {
   final TextEditingController _controller = TextEditingController();
@@ -11,7 +11,6 @@ class MinusScreen extends StatelessWidget {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
-          // 배경 이미지
           Container(
             decoration: BoxDecoration(
               image: DecorationImage(
@@ -20,77 +19,62 @@ class MinusScreen extends StatelessWidget {
               ),
             ),
           ),
-          // 중앙에 텍스트 입력 필드 배치
           Center(
             child: Container(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // 자식 위젯 높이만큼만 공간 사용
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '지출 금액',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    '출금 금액',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 20), // 텍스트와 입력 필드 간 간격
+                  SizedBox(height: 20),
                   TextField(
-                    controller: _controller, // 입력한 값을 가져오기 위해 컨트롤러 사용
-                    keyboardType: TextInputType.number, // 숫자 입력 전용 키보드
+                    controller: _controller,
+                    keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white, // 입력 필드 배경색
+                      fillColor: Colors.white,
                       hintText: '금액 입력',
                       hintStyle: TextStyle(color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none, // 테두리 제거
+                        borderSide: BorderSide.none,
                       ),
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 20,
-                      ),
+                      contentPadding: EdgeInsets.symmetric(vertical: 15, horizontal: 20),
                     ),
                     style: TextStyle(fontSize: 18, color: Colors.black),
                   ),
-                  SizedBox(height: 30), // 입력 필드와 버튼 간 간격
+                  SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () async {
-                      String enteredAmount = _controller.text; // 입력한 값 가져오기
+                      String enteredAmount = _controller.text;
                       if (enteredAmount.isEmpty) {
-                        // 빈 값일 경우 AlertDialog로 에러 메시지 표시
                         _showErrorDialog(context, '금액을 입력해주세요!');
                         return;
                       }
-
-                      int? expenseAmount = int.tryParse(enteredAmount);
-                      if (expenseAmount == null || expenseAmount <= 0) {
-                        // 숫자가 아니거나 0 이하일 경우 에러 메시지 표시
+                      int? amount = int.tryParse(enteredAmount);
+                      if (amount == null || amount <= 0) {
                         _showErrorDialog(context, '금액은 양의 숫자만 입력할 수 있습니다.');
                         return;
                       }
 
-                      // Firestore에 업데이트
                       try {
-                        await _subtractExpense(expenseAmount);
-                        Navigator.pop(context, enteredAmount); // 입력 값을 전달하며 이전 화면으로 돌아감
+                        await _addTransaction(amount, "withdrawal");
+                        Navigator.pop(context, enteredAmount);
                       } catch (e) {
                         _showErrorDialog(context, '데이터베이스 업데이트 중 오류가 발생했습니다.');
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 15), // 버튼 크기 조정
+                      padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      backgroundColor: Colors.red, // 버튼 색상
+                      backgroundColor: Colors.red,
                     ),
-                    child: Text(
-                      '지출하기',
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                    child: Text('출금하기', style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ],
               ),
@@ -101,36 +85,38 @@ class MinusScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _subtractExpense(int expenseAmount) async {
-    // 현재 사용자 가져오기
+  Future<void> _addTransaction(int amount, String type) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) throw Exception("사용자가 로그인되어 있지 않습니다.");
 
-    // Firestore 참조
     final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
 
-    // 트랜잭션으로 잔액 및 지출 금액 업데이트
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       final snapshot = await transaction.get(userDoc);
 
       if (!snapshot.exists) {
-        // 문서가 없는 경우 에러 처리
-        throw Exception("잔액 정보가 없습니다.");
+        throw Exception("사용자의 데이터가 존재하지 않습니다.");
+      } else {
+        final data = snapshot.data()!;
+        final currentBalance = data['account_balance'] ?? 0;
+        final currentMinusAccount = data['minus_account'] ?? 0;
+        if (currentBalance < amount) {
+          throw Exception("잔액이 부족합니다.");
+        }
+
+        transaction.update(userDoc, {
+          'account_balance': currentBalance - amount, // 총 금액 차감
+          'minus_account': currentMinusAccount + amount, // 기존 지출 금액에 새 금액 추가
+        });
       }
 
-      // 기존 잔액과 지출 금액 가져오기
-      final data = snapshot.data()!;
-      final currentBalance = data['account_balance'] ?? 0;
-      final currentMinusAccount = data['minus_account'] ?? 0;
-
-      if (currentBalance < expenseAmount) {
-        // 잔액 부족 에러 처리
-        throw Exception("잔액이 부족합니다. 현재 잔액: $currentBalance 원");
-      }
-
-      transaction.update(userDoc, {
-        'account_balance': currentBalance - expenseAmount, // 총 금액 차감
-        'minus_account': currentMinusAccount + expenseAmount, // 기존 지출 금액에 새 금액 추가
+      final transactionsCollection =
+      FirebaseFirestore.instance.collection('transactions');
+      await transactionsCollection.add({
+        'userId': user.uid,
+        'amount': amount,
+        'type': type,
+        'timestamp': FieldValue.serverTimestamp(),
       });
     });
   }
@@ -145,7 +131,7 @@ class MinusScreen extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(); // 다이얼로그 닫기
+                Navigator.of(context).pop();
               },
               child: Text('확인'),
             ),
