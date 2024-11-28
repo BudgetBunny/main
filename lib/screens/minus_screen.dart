@@ -59,12 +59,24 @@ class MinusScreen extends StatelessWidget {
                     onPressed: () async {
                       String enteredAmount = _controller.text; // 입력한 값 가져오기
                       if (enteredAmount.isEmpty) {
-                        _showErrorDialog(context, '입력 오류', '금액을 입력해주세요!');
-                      } else if (int.tryParse(enteredAmount) == null) {
-                        _showErrorDialog(context, '입력 오류', '금액은 숫자만 입력할 수 있습니다.');
-                      } else {
-                        // Firestore에 업데이트
-                        await _subtractExpense(context, int.parse(enteredAmount));
+                        // 빈 값일 경우 AlertDialog로 에러 메시지 표시
+                        _showErrorDialog(context, '금액을 입력해주세요!');
+                        return;
+                      }
+
+                      int? expenseAmount = int.tryParse(enteredAmount);
+                      if (expenseAmount == null || expenseAmount <= 0) {
+                        // 숫자가 아니거나 0 이하일 경우 에러 메시지 표시
+                        _showErrorDialog(context, '금액은 양의 숫자만 입력할 수 있습니다.');
+                        return;
+                      }
+
+                      // Firestore에 업데이트
+                      try {
+                        await _subtractExpense(expenseAmount);
+                        Navigator.pop(context, enteredAmount); // 입력 값을 전달하며 이전 화면으로 돌아감
+                      } catch (e) {
+                        _showErrorDialog(context, '데이터베이스 업데이트 중 오류가 발생했습니다.');
                       }
                     },
                     style: ElevatedButton.styleFrom(
@@ -89,65 +101,52 @@ class MinusScreen extends StatelessWidget {
     );
   }
 
-// Firestore에서 금액 차감
-  Future<void> _subtractExpense(BuildContext context, int expenseAmount) async {
-    try {
-      // 현재 사용자 가져오기
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        _showErrorDialog(context, '오류', '로그인된 사용자가 없습니다.');
-        return;
+  Future<void> _subtractExpense(int expenseAmount) async {
+    // 현재 사용자 가져오기
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) throw Exception("사용자가 로그인되어 있지 않습니다.");
+
+    // Firestore 참조
+    final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+    // 트랜잭션으로 잔액 및 지출 금액 업데이트
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final snapshot = await transaction.get(userDoc);
+
+      if (!snapshot.exists) {
+        // 문서가 없는 경우 에러 처리
+        throw Exception("잔액 정보가 없습니다.");
       }
 
-      // Firestore에서 사용자 문서 참조
-      final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      // 기존 잔액과 지출 금액 가져오기
+      final data = snapshot.data()!;
+      final currentBalance = data['account_balance'] ?? 0;
+      final currentMinusAccount = data['minus_account'] ?? 0;
 
-      // 트랜잭션으로 account_balance 및 minus_account 업데이트
-      await FirebaseFirestore.instance.runTransaction((transaction) async {
-        final snapshot = await transaction.get(docRef);
+      if (currentBalance < expenseAmount) {
+        // 잔액 부족 에러 처리
+        throw Exception("잔액이 부족합니다. 현재 잔액: $currentBalance 원");
+      }
 
-        if (!snapshot.exists || snapshot.data() == null) {
-          _showErrorDialog(context, '오류', '잔액 정보가 없습니다.');
-          return;
-        }
-
-        // 현재 잔액 및 기존 minus_account 값 가져오기
-        int currentBalance = snapshot['account_balance'] ?? 0;
-        int currentMinusAccount = snapshot['minus_account'] ?? 0;
-
-        if (currentBalance < expenseAmount) {
-          // 잔액 부족 에러 처리
-          _showErrorDialog(context, '잔액 부족', '잔액이 부족합니다. 현재 잔액: $currentBalance원');
-          return;
-        }
-
-        // 잔액 차감 및 minus_account 값 누적 업데이트
-        transaction.update(docRef, {
-          'account_balance': currentBalance - expenseAmount, // 총 금액 업데이트
-          'minus_account': currentMinusAccount + expenseAmount, // 기존 지출 금액에 새 금액 추가
-        });
+      transaction.update(userDoc, {
+        'account_balance': currentBalance - expenseAmount, // 총 금액 차감
+        'minus_account': currentMinusAccount + expenseAmount, // 기존 지출 금액에 새 금액 추가
       });
-
-      // 성공 후 컨트롤러 초기화 및 홈 화면으로 이동
-      _controller.clear();
-      Navigator.pushReplacementNamed(context, '/home'); // 홈 화면으로 이동
-    } catch (e) {
-      // 오류 처리
-      _showErrorDialog(context, '오류', '지출을 처리하는 중 문제가 발생했습니다: $e');
-    }
+    });
   }
 
-  // 오류 메시지 표시
-  void _showErrorDialog(BuildContext context, String title, String message) {
+  void _showErrorDialog(BuildContext context, String message) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(title),
+          title: Text('입력 오류'),
           content: Text(message),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
               child: Text('확인'),
             ),
           ],

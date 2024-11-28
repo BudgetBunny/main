@@ -214,68 +214,69 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(top: 70.0),
-                  child: FutureBuilder<DocumentSnapshot>(
-                    future: FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser?.uid)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator(); // 로딩 표시
-                      }
-                      if (snapshot.hasData && snapshot.data != null) {
-                        final data = snapshot.data!;
-                        final remainingBalance = data['account_balance'] ?? 0; // Firestore에서 잔액 가져오기
-                        final currentMonth = DateTime.now().month; // 현재 월 가져오기
-                        final monthName = _getMonthName(currentMonth); // 월 이름 변환 함수 호출
+        Padding(
+          padding: const EdgeInsets.only(top: 70.0),
+          child: FutureBuilder<DocumentSnapshot>(
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(FirebaseAuth.instance.currentUser?.uid)
+                .get(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator()); // 로딩 표시
+              }
+              if (snapshot.hasData && snapshot.data != null) {
+                // Safely handle missing data with default values
+                final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                final remainingBalance = data['account_balance'] ?? 0; // 잔액 가져오기, 없으면 0
+                final currentMonth = DateTime.now().month; // 현재 월 가져오기
+                final monthName = _getMonthName(currentMonth); // 월 이름 변환 함수 호출
 
-                        return Column(
-                          children: [
-                            Text.rich(
-                              TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: '${monthName} 남은 잔액\n', // 이번 달 이름 표시
-                                    style: TextStyle(
-                                      color: Color(0xFF676866),
-                                      fontSize: 20,
-                                      fontFamily: 'Roboto',
-                                      fontWeight: FontWeight.w400,
-                                      height: 4.5,
-                                      letterSpacing: -0.40,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: '$remainingBalance 원', // 남은 잔액 표시
-                                    style: TextStyle(
-                                      color: Color(0xFF297E1C), // 초록색 텍스트
-                                      fontSize: 26,
-                                      fontFamily: 'Roboto',
-                                      fontWeight: FontWeight.w400,
-                                      height: 0.04,
-                                      letterSpacing: -0.52,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              textAlign: TextAlign.center,
+                return Column(
+                  children: [
+                    Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: '${monthName} 남은 잔액\n', // 이번 달 이름 표시
+                            style: TextStyle(
+                              color: Color(0xFF676866),
+                              fontSize: 20,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w400,
+                              height: 4.5,
+                              letterSpacing: -0.40,
                             ),
-                          ],
-                        );
-                      }
-                      return Text(
-                        '오류 발생',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  ),
+                          ),
+                          TextSpan(
+                            text: '$remainingBalance 원', // 남은 잔액 표시
+                            style: TextStyle(
+                              color: Color(0xFF297E1C), // 초록색 텍스트
+                              fontSize: 26,
+                              fontFamily: 'Roboto',
+                              fontWeight: FontWeight.w400,
+                              height: 0.04,
+                              letterSpacing: -0.52,
+                            ),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                );
+              }
+              return Text(
+                '오류 발생',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
                 ),
+              );
+            },
+          ),
+        ),
                 Padding(
                   padding: const EdgeInsets.only(top: 80.0),
                   child: Column(
