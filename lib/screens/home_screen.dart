@@ -39,7 +39,6 @@ String _getMonthName(int month) {
   return monthNames[month - 2];
 }
 class _HomeScreenState extends State<HomeScreen> {
-  final ScrollController _scrollController = ScrollController();
   String _selectedTab = '입출금';
   int _totalPlusAmount = 0;
   int _totalMinusAmount = 0;
