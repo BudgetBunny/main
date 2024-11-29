@@ -30,6 +30,12 @@ class _ChartScreenState extends State<ChartScreen> {
   DateTime? _selectedDay;
   String _selectedTab = '통계';
 
+  Map<DateTime, Map<String, double>> transactions = {
+    DateTime(2024, 11, 1): {'deposit': 5000, 'expense': 2000},
+    DateTime(2024, 11, 5): {'deposit': 3000, 'expense': 1000},
+    DateTime(2024, 11, 11): {'deposit': 7000, 'expense': 3000},
+  };
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -149,6 +155,49 @@ class _ChartScreenState extends State<ChartScreen> {
                     ),
                     defaultTextStyle: TextStyle(color: Colors.black),
                   ),
+                  calendarBuilders: CalendarBuilders(
+                    defaultBuilder: (context, date, focusedDay) {
+                      var transaction = transactions[_stripTime(date)];
+                      String deposit = transaction != null
+                          ? '+${transaction['deposit']?.toInt() ?? 0}'
+                          : '';
+                      String expense = transaction != null
+                          ? '-${transaction['expense']?.toInt() ?? 0}'
+                          : '';
+
+                      return Column(
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 13),
+                              Text(
+                                date.day.toString(),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              if (deposit.isNotEmpty)
+                                Text(
+                                  deposit,
+                                  style: TextStyle(fontSize: 8, color: Colors.blue),
+                                ),
+                              if (expense.isNotEmpty)
+                                Text(
+                                  expense,
+                                  style: TextStyle(fontSize: 8, color: Colors.red),
+                                ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -225,6 +274,10 @@ class _ChartScreenState extends State<ChartScreen> {
         ),
       ),
     );
+  }
+
+  DateTime _stripTime(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
   }
 
   Widget _buildTabItem(String label, String route) {

@@ -28,7 +28,7 @@ class PMLogScreen extends StatefulWidget {
 class _PMLogState extends State<PMLogScreen> {
   String _backgroundImage = 'assets/images/background_log.png'; // 초기 배경 이미지
   List<Map<String, dynamic>> _transactions = [];
-  String _selectedFilter = '입금'; // 필터 상태
+  String _selectedFilter = '전체'; // 필터 상태
   String _selectedTab = '입출금'; // 탭 상태
 
   @override
