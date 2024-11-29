@@ -40,9 +40,6 @@ String _getMonthName(int month) {
 }
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedTab = '입출금';
-  int _totalPlusAmount = 0;
-  int _totalMinusAmount = 0;
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
