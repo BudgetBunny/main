@@ -508,17 +508,9 @@ class _HomeScreenState extends State<HomeScreen> {
         });
 
         // /goal 경로일 때만 arguments 전달
-        if (route == '/goal') {
-          Navigator.pushNamed(
-            context,
-            '/goal',
-            arguments: {
-              'totalAmount': _totalPlusAmount - _totalMinusAmount,
-            },
-          );
-        } else {
-          Navigator.pushNamed(context, route); // 다른 경로로 이동
-        }
+
+
+        Navigator.pushNamed(context, route);
       },
 
       child: Container(
