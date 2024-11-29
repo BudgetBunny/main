@@ -238,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               TextSpan(
                                 children: [
                                   TextSpan(
-                                    text: '${monthName} 남은 잔액\n', // 이번 달 이름 표시
+                                    text: '${monthName} 총 입출금\n', // 이번 달 이름 표시
                                     style: TextStyle(
                                       color: Color(0xFF676866),
                                       fontSize: 20,

@@ -12,7 +12,7 @@ class _GoalScreenState extends State<GoalScreen> {
   final TextEditingController _goalAmountController = TextEditingController();
   final FocusNode _goalFocusNode = FocusNode();
   String _selectedTab = '관리';
-  int _totalAmount = 0;
+  int _minusAmount = 0;
   int? _goalAmount; // Firestore에서 가져온 목표 금액
   bool _isResettingGoal = false; // 목표 금액 재설정 상태 여부
 
@@ -33,12 +33,12 @@ class _GoalScreenState extends State<GoalScreen> {
 
       if (data != null) {
         setState(() {
-          _totalAmount = data['account_balance'] ?? 0;
+          _minusAmount = data['minus_account'] ?? 0;
           _goalAmount = data['goal_amount'];
 
           // 목표 금액이 있을 경우 성공/실패 여부를 판단
           if (_goalAmount != null) {
-            if (_totalAmount > _goalAmount!) {
+            if (_minusAmount > _goalAmount!) {
               _backgroundImage = 'assets/images/goalFailed.png'; // 목표 초과 -> 실패
             } else {
               _backgroundImage = 'assets/images/goalSuccess.png'; // 목표 이하 -> 성공
@@ -286,12 +286,12 @@ class _GoalScreenState extends State<GoalScreen> {
           SizedBox(height: 20),
           Center(
             child: Text(
-              _goalAmount != null && _totalAmount > _goalAmount!
-                  ? '초과 금액 : ${(_totalAmount - _goalAmount!) * -1}원'
-                  : '남은 금액 : ${_goalAmount != null ? (_goalAmount! - _totalAmount) : 0}원',
+              _goalAmount != null && _minusAmount > _goalAmount!
+                  ? '초과 금액 : ${(_minusAmount - _goalAmount!)}원'
+                  : '남은 금액 : ${_goalAmount != null ? (_goalAmount! - _minusAmount) : 0}원',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: (_totalAmount > _goalAmount!)
+                color: (_minusAmount > _goalAmount!)
                     ? Color(0xffD35656) // 목표 금액 초과 -> 붉은색
                     : Color(0xff2A7F1D), // 목표 금액 이하 -> 초록색
                 fontSize: 21,
@@ -320,12 +320,12 @@ class _GoalScreenState extends State<GoalScreen> {
                 // 진행 상태에 맞춰 채워진 초록색 막대
                 FractionallySizedBox(
                   widthFactor: (_goalAmount != null && _goalAmount! > 0)
-                      ? (_totalAmount / _goalAmount!).clamp(0, 1)
+                      ? (_minusAmount / _goalAmount!).clamp(0, 1)
                       : 0,
                   child: Container(
                     height: 40,
                     decoration: BoxDecoration(
-                      color: (_totalAmount > _goalAmount!)
+                      color: (_minusAmount > _goalAmount!)
                           ? Color(0xffD35656) // 목표 금액 초과 -> 붉은색
                           : Color(0xff7DDAB5), // 목표 금액 이하 -> 초록색
                       borderRadius: BorderRadius.circular(15),
@@ -335,7 +335,7 @@ class _GoalScreenState extends State<GoalScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(right: 8.0), // 오른쪽 여백
                         child: Text(
-                          '$_totalAmount원',
+                          '$_minusAmount원',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 14,
@@ -360,14 +360,14 @@ class _GoalScreenState extends State<GoalScreen> {
                   '0',
                   style: TextStyle(
                     fontSize: 16,
-                    color: (_totalAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+                    color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
                   ),
                 ),
                 Text(
                   '${_goalAmount ?? 0}',
                   style: TextStyle(
                     fontSize: 16,
-                    color: (_totalAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+                    color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
                   ),
                 ),
               ],
