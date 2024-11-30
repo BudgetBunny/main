@@ -121,10 +121,57 @@ class _GoalScreenState extends State<GoalScreen> {
                     fontSize: 22,
                     fontFamily: 'Roboto',
                     fontWeight: FontWeight.w400,
+                    height: 0.06,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(0, 3.5), // 그림자의 x, y 위치
+                        blurRadius: 5.0,          // 그림자의 흐림 정도
+                        color: Colors.black38,    // 그림자의 색상
+                      ),
+                    ],
                   ),
                 ),
                 centerTitle: true,
                 automaticallyImplyLeading: false,
+                actions: [
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.menu, color: Color(0xFF676966)),
+                    onSelected: (String choice) {
+                      if (choice == '마이페이지') {
+                        Navigator.pushNamed(context, '/mypage');
+                      } else if (choice == '로그아웃') {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) => AlertDialog(
+                            title: Text('로그아웃'),
+                            content: Text('정말 로그아웃하시겠습니까?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('취소'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pushNamedAndRemoveUntil(
+                                      context, '/', (route) => false);
+                                },
+                                child: Text('확인'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      return {'마이페이지', '로그아웃'}.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
+                  ),
+                ],
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 17.0),
