@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'passwordreset_screen.dart'; // 비밀번호 재설정 화면 import
+import 'nicknamereset_screen.dart'; // 닉네임 재설정 화면 import
 
 class MyPageScreen extends StatelessWidget {
   const MyPageScreen({super.key});
@@ -9,9 +10,7 @@ class MyPageScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 화면 크기 가져오기
-    final size = MediaQuery
-        .of(context)
-        .size;
+    final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Container(
@@ -55,7 +54,6 @@ class MyPageScreen extends StatelessWidget {
                     .doc(FirebaseAuth.instance.currentUser!.uid)
                     .snapshots(),
                 builder: (context, snapshot) {
-                  print('Snapshot: ${snapshot.connectionState}');
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return CircularProgressIndicator();
                   }
@@ -69,15 +67,14 @@ class MyPageScreen extends StatelessWidget {
                   }
 
                   var userData = snapshot.data!;
-                  print('User Data: ${userData.data()}'); // Firestore 데이터 출력
                   String nickname = userData['nickname'] ?? '닉네임 없음';
                   String email = userData['email'] ?? '이메일 없음';
 
                   return Column(
                     children: [
-                      _buildInfoRow(size, '닉네임', nickname, '닉네임 재설정'),
+                      _buildInfoRow(context, size, '아이디', email, ''), // 아이디 먼저 표시
                       SizedBox(height: size.height * 0.03),
-                      _buildInfoRow(size, '아이디', email, '아이디 재설정'),
+                      _buildInfoRow(context, size, '닉네임', nickname, '닉네임 재설정'),
                       SizedBox(height: size.height * 0.03),
                       _buildPasswordResetRow(context, size),
                       SizedBox(height: size.height * 0.05),
@@ -129,25 +126,23 @@ class MyPageScreen extends StatelessWidget {
             } else if (choice == '로그아웃') {
               showDialog(
                 context: context,
-                builder: (BuildContext context) =>
-                    AlertDialog(
-                      title: const Text('로그아웃'),
-                      content: const Text('정말 로그아웃하시겠습니까?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context), // 팝업 닫기
-                          child: const Text('취소'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pushNamedAndRemoveUntil(
-                                context, '/', (
-                                route) => false); // 로그아웃 후 메인으로 이동
-                          },
-                          child: const Text('확인'),
-                        ),
-                      ],
+                builder: (BuildContext context) => AlertDialog(
+                  title: const Text('로그아웃'),
+                  content: const Text('정말 로그아웃하시겠습니까?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context), // 팝업 닫기
+                      child: const Text('취소'),
                     ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushNamedAndRemoveUntil(
+                            context, '/', (route) => false); // 로그아웃 후 메인으로 이동
+                      },
+                      child: const Text('확인'),
+                    ),
+                  ],
+                ),
               );
             }
           },
@@ -183,7 +178,7 @@ class MyPageScreen extends StatelessWidget {
   }
 
   // 정보 행 위젯
-  Widget _buildInfoRow(Size size, String label, String value,
+  Widget _buildInfoRow(BuildContext context, Size size, String label, String value,
       String buttonText) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
@@ -202,6 +197,7 @@ class MyPageScreen extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
               child: TextField(
+                enabled: false, // 텍스트 필드 클릭 비활성화
                 decoration: InputDecoration(
                   hintText: value,
                   hintStyle: TextStyle(
@@ -215,25 +211,33 @@ class MyPageScreen extends StatelessWidget {
               ),
             ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF20DCC0),
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.02),
+          if (buttonText.isNotEmpty)
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF20DCC0),
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(size.width * 0.02),
+                ),
+              ),
+              onPressed: () {
+                if (label == '닉네임') {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const NicknameResetScreen(),
+                    ),
+                  );
+                }
+              },
+              child: Text(
+                buttonText,
+                style: TextStyle(
+                  fontSize: size.width * 0.04,
+                  color: Colors.white,
+                ),
               ),
             ),
-            onPressed: () {
-              // 버튼 클릭 동작
-            },
-            child: Text(
-              buttonText,
-              style: TextStyle(
-                fontSize: size.width * 0.04,
-                color: Colors.white,
-              ),
-            ),
-          ),
         ],
       ),
     );
