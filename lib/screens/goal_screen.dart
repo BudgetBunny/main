@@ -257,7 +257,7 @@ class _GoalScreenState extends State<GoalScreen> {
                     ),
                     child: Text(
                       '목표 금액 재설정',
-                      style: TextStyle(fontSize: 18, color: Colors.white,fontWeight: FontWeight.bold),
+                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -282,16 +282,17 @@ class _GoalScreenState extends State<GoalScreen> {
               ],
             ),
           ),
-
           SizedBox(height: 20),
           Center(
             child: Text(
-              _goalAmount != null && _minusAmount > _goalAmount!
+              _goalAmount == null
+                  ? '목표 금액이 설정되지 않았습니다.'
+                  : (_minusAmount > _goalAmount!
                   ? '초과 금액 : ${(_minusAmount - _goalAmount!)}원'
-                  : '남은 금액 : ${_goalAmount != null ? (_goalAmount! - _minusAmount) : 0}원',
+                  : '남은 금액 : ${_goalAmount! - _minusAmount}원'),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: (_minusAmount > _goalAmount!)
+                color: (_goalAmount != null && _minusAmount > _goalAmount!)
                     ? Color(0xffD35656) // 목표 금액 초과 -> 붉은색
                     : Color(0xff2A7F1D), // 목표 금액 이하 -> 초록색
                 fontSize: 21,
@@ -304,75 +305,77 @@ class _GoalScreenState extends State<GoalScreen> {
           ),
           SizedBox(height: 20),
           // 진행 정도 막대 그래프
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Stack(
-              children: [
-                // 배경 막대
-                Container(
-                  height: 40,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                ),
-                // 진행 상태에 맞춰 채워진 초록색 막대
-                FractionallySizedBox(
-                  widthFactor: (_goalAmount != null && _goalAmount! > 0)
-                      ? (_minusAmount / _goalAmount!).clamp(0, 1)
-                      : 0,
-                  child: Container(
+          if (_goalAmount != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              child: Stack(
+                children: [
+                  // 배경 막대
+                  Container(
                     height: 40,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      color: (_minusAmount > _goalAmount!)
-                          ? Color(0xffD35656) // 목표 금액 초과 -> 붉은색
-                          : Color(0xff7DDAB5), // 목표 금액 이하 -> 초록색
+                      color: Colors.grey[300],
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Align(
-                      alignment: Alignment.centerRight,  // 오른쪽 정렬
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 8.0), // 오른쪽 여백
-                        child: Text(
-                          '$_minusAmount원',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
+                  ),
+                  // 진행 상태에 맞춰 채워진 초록색 막대
+                  FractionallySizedBox(
+                    widthFactor: (_goalAmount! > 0)
+                        ? (_minusAmount / _goalAmount!).clamp(0, 1)
+                        : 0,
+                    child: Container(
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: (_minusAmount > _goalAmount!)
+                            ? Color(0xffD35656) // 목표 금액 초과 -> 붉은색
+                            : Color(0xff7DDAB5), // 목표 금액 이하 -> 초록색
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerRight, // 오른쪽 정렬
+                        child: Padding(
+                          padding: EdgeInsets.only(right: 8.0), // 오른쪽 여백
+                          child: Text(
+                            '$_minusAmount원',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           SizedBox(height: 5),
           // 목표 금액 텍스트 (0원 ~ 목표 금액)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '0',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+          if (_goalAmount != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '0',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+                    ),
                   ),
-                ),
-                Text(
-                  '${_goalAmount ?? 0}',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+                  Text(
+                    '${_goalAmount!}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: (_minusAmount > _goalAmount!) ? Colors.white : Colors.black, // 목표 초과 시 하얀색
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

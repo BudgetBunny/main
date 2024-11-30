@@ -139,78 +139,106 @@ class _HomeScreenState extends State<HomeScreen> {
                   alignment: Alignment.topCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10.0),
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '이번달 목표 금액 ',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 3,
-                              letterSpacing: -0.36,
+                    child: FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser?.uid)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // 로딩 중일 때 표시
+                        }
+                        if (snapshot.hasData && snapshot.data != null) {
+                          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                          final goalAmount = data['goal_amount'] ?? 0; // 목표 금액
+                          final minusAccount = data['minus_account'] ?? 0; // 현재 사용 금액
+                          final remainingAmount = goalAmount - minusAccount; // 남은 금액 계산
+
+                          return Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '이번달 목표 금액 ',
+                                  style: TextStyle(
+                                    color: Color(0xFF297E1C),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 3,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${goalAmount.toString()} ',
+                                  style: TextStyle(
+                                    color: Color(0xFF586556),
+                                    fontSize: 20,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.07,
+                                    letterSpacing: -0.40,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '원',
+                                  style: TextStyle(
+                                    color: Color(0xFF586556),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.09,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' 까지\n',
+                                  style: TextStyle(
+                                    color: Color(0xFF297E1C),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.09,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${remainingAmount.toString()} ',
+                                  style: TextStyle(
+                                    color: remainingAmount >= 0
+                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
+                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
+                                    fontSize: 19,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w700,
+                                    height: 0.08,
+                                    letterSpacing: -0.38,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '원 남았어요!',
+                                  style: TextStyle(
+                                    color: Color(0xFF297E1C),
+                                    fontSize: 19,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.08,
+                                    letterSpacing: -0.38,
+                                  ),
+                                ),
+                              ],
                             ),
+                            textAlign: TextAlign.center,
+                          );
+                        }
+                        return Text(
+                          '데이터를 불러올 수 없습니다.',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          TextSpan(
-                            text: '500,000 ',
-                            style: TextStyle(
-                              color: Color(0xFF586556),
-                              fontSize: 20,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.07,
-                              letterSpacing: -0.40,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '원',
-                            style: TextStyle(
-                              color: Color(0xFF586556),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.09,
-                              letterSpacing: -0.36,
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' 까지\n',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.09,
-                              letterSpacing: -0.36,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '40,000 ',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 19,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 0.08,
-                              letterSpacing: -0.38,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '원 남았어요!',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 19,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.08,
-                              letterSpacing: -0.38,
-                            ),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
+                        );
+                      },
                     ),
                   ),
                 ),
