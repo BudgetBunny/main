@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'goal_screen.dart';
 
@@ -29,6 +31,49 @@ class _ChartScreenState extends State<ChartScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   String _selectedTab = '통계';
+
+  Map<DateTime, Map<String, double>> transactions = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();  // 앱 시작 시 거래 데이터 불러오기
+  }
+
+  Future<void> _loadTransactions() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final transactionsQuerySnapshot = await FirebaseFirestore.instance
+        .collection('transactions')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    final Map<DateTime, Map<String, double>> tempTransactions = {};
+
+    for (var doc in transactionsQuerySnapshot.docs) {
+      final data = doc.data();
+      final timestamp = (data['timestamp'] as Timestamp).toDate();
+      final amount = data['amount']?.toDouble() ?? 0.0;
+      final type = data['type'];
+
+      if (type == 'deposit' || type == 'withdrawal') {
+        final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
+        if (!tempTransactions.containsKey(date)) {
+          tempTransactions[date] = {'deposit': 0.0, 'withdrawal': 0.0};
+        }
+        if (type == 'deposit') {
+          tempTransactions[date]!['deposit'] = (tempTransactions[date]!['deposit'] ?? 0.0) + amount;
+        } else if (type == 'withdrawal') {
+          tempTransactions[date]!['withdrawal'] = (tempTransactions[date]!['withdrawal'] ?? 0.0) + amount;
+        }
+      }
+    }
+
+    setState(() {
+      transactions = tempTransactions;  // 거래 데이터를 상태에 업데이트
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +194,49 @@ class _ChartScreenState extends State<ChartScreen> {
                     ),
                     defaultTextStyle: TextStyle(color: Colors.black),
                   ),
+                  calendarBuilders: CalendarBuilders(
+                    defaultBuilder: (context, date, focusedDay) {
+                      var transaction = transactions[_stripTime(date)];
+                      String deposit = transaction != null
+                          ? '+${transaction['deposit']?.toInt() ?? 0}'
+                          : '';
+                      String withdrawal  = transaction != null
+                          ? '-${transaction['withdrawal']?.toInt() ?? 0}'
+                          : '';
+
+                      return Column(
+                        children: [
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 13),
+                              Text(
+                                date.day.toString(),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              if (deposit.isNotEmpty)
+                                Text(
+                                  deposit,
+                                  style: TextStyle(fontSize: 8, color: Colors.blue),
+                                ),
+                              if (withdrawal .isNotEmpty)
+                                Text(
+                                  withdrawal ,
+                                  style: TextStyle(fontSize: 8, color: Colors.red),
+                                ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
               SizedBox(height: 20),
@@ -225,6 +313,10 @@ class _ChartScreenState extends State<ChartScreen> {
         ),
       ),
     );
+  }
+
+  DateTime _stripTime(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
   }
 
   Widget _buildTabItem(String label, String route) {

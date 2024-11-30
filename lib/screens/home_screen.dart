@@ -1,19 +1,27 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'chart_screen.dart';
 import 'goal_screen.dart';
+import 'plus_screen.dart';
+import 'minus_screen.dart';
+import 'PMLog_screen.dart';
 
 
 
 class MyApp extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       initialRoute: '/',
       routes: {
         '/': (context) => HomeScreen(),
-        '/chart': (context) => ChartScreen(), // chart 화면으로 이동
-        '/home': (context) => HomeScreen(), // 입출금 화면으로 이동
-        '/goal': (context) => GoalScreen(), // 목표 관리 화면으로 이동
+        '/home': (context) => HomeScreen(),
+        '/chart': (context) => ChartScreen(),
+        '/goal': (context) => GoalScreen(),
+        '/plus': (context) => PlusScreen(),
+        '/minus': (context) => MinusScreen(),
       },
     );
   }
@@ -23,13 +31,22 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+String _getMonthName(int month) {
+  const monthNames = [
+    '1월', '2월', '3월', '4월', '5월', '6월',
+    '7월', '8월', '9월', '10월', '11월', '12월'
+  ];
+  return monthNames[month-1];
+}
 class _HomeScreenState extends State<HomeScreen> {
-  final ScrollController _scrollController = ScrollController();
   String _selectedTab = '입출금';
+  int _totalPlusAmount = 0;
+  int _totalMinusAmount = 0;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Stack(
           children: [
@@ -122,115 +139,174 @@ class _HomeScreenState extends State<HomeScreen> {
                   alignment: Alignment.topCenter,
                   child: Padding(
                     padding: const EdgeInsets.only(top: 10.0),
-                    child: Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '이번달 목표 금액 ',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 3,
-                              letterSpacing: -0.36,
+                    child: FutureBuilder<DocumentSnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(FirebaseAuth.instance.currentUser?.uid)
+                          .get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // 로딩 중일 때 표시
+                        }
+                        if (snapshot.hasData && snapshot.data != null) {
+                          final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                          final goalAmount = data['goal_amount'] ?? 0; // 목표 금액
+                          final minusAccount = data['minus_account'] ?? 0; // 현재 사용 금액
+                          final remainingAmount = goalAmount - minusAccount; // 남은 금액 계산
+
+                          return Text.rich(
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '이번달 목표 금액 ',
+                                  style: TextStyle(
+                                    color: Color(0xFF297E1C),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 3,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${goalAmount.toString()} ',
+                                  style: TextStyle(
+                                    color: Color(0xFF586556),
+                                    fontSize: 20,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.07,
+                                    letterSpacing: -0.40,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '원',
+                                  style: TextStyle(
+                                    color: Color(0xFF586556),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.09,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' 까지\n',
+                                  style: TextStyle(
+                                    color: Color(0xFF297E1C),
+                                    fontSize: 18,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.09,
+                                    letterSpacing: -0.36,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: '${remainingAmount.toString().replaceAll('-', '')} ',
+                                  style: TextStyle(
+                                    color: remainingAmount >= 0
+                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
+                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
+                                    fontSize: 19,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w700,
+                                    height: 0.08,
+                                    letterSpacing: -0.38,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: remainingAmount >= 0
+                                      ? '원 남았어요!'
+                                      : '원 초과했어요!',
+                                  style: TextStyle(
+                                    color: remainingAmount >= 0
+                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
+                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
+                                    fontSize: 19,
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w500,
+                                    height: 0.08,
+                                    letterSpacing: -0.38,
+                                  ),
+                                ),
+                              ],
                             ),
+                            textAlign: TextAlign.center,
+                          );
+                        }
+                        return Text(
+                          '데이터를 불러올 수 없습니다.',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                           ),
-                          TextSpan(
-                            text: '500,000 ',
-                            style: TextStyle(
-                              color: Color(0xFF586556),
-                              fontSize: 20,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.07,
-                              letterSpacing: -0.40,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '원',
-                            style: TextStyle(
-                              color: Color(0xFF586556),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.09,
-                              letterSpacing: -0.36,
-                            ),
-                          ),
-                          TextSpan(
-                            text: ' 까지\n',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 18,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.09,
-                              letterSpacing: -0.36,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '40,000 ',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 19,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              height: 0.08,
-                              letterSpacing: -0.38,
-                            ),
-                          ),
-                          TextSpan(
-                            text: '원 남았어요!',
-                            style: TextStyle(
-                              color: Color(0xFF297E1C),
-                              fontSize: 19,
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w500,
-                              height: 0.08,
-                              letterSpacing: -0.38,
-                            ),
-                          ),
-                        ],
-                      ),
-                      textAlign: TextAlign.center,
+                        );
+                      },
                     ),
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 70.0),
-                  child: Column(
-                    children: [
-                      Text.rich(
-                        TextSpan(
+                  child: FutureBuilder<DocumentSnapshot>(
+                    future: FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                        .get(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator()); // 로딩 표시
+                      }
+                      if (snapshot.hasData && snapshot.data != null) {
+                        // Safely handle missing data with default values
+                        final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                        final remainingBalance = data['account_balance'] ?? 0; // 잔액 가져오기, 없으면 0
+                        final currentMonth = DateTime.now().month; // 현재 월 가져오기
+                        final monthName = _getMonthName(currentMonth); // 월 이름 변환 함수 호출
+
+                        return Column(
                           children: [
-                            TextSpan(
-                              text: '10월 총 소비\n',
-                              style: TextStyle(
-                                color: Color(0xFF676866),
-                                fontSize: 20,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 4.5,
-                                letterSpacing: -0.40,
+                            Text.rich(
+                              TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: '${monthName} 총 입출금\n', // 이번 달 이름 표시
+                                    style: TextStyle(
+                                      color: Color(0xFF676866),
+                                      fontSize: 20,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w400,
+                                      height: 4.5,
+                                      letterSpacing: -0.40,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: '$remainingBalance 원', // 남은 잔액 표시
+                                    style: TextStyle(
+                                      color: Color(0xFF297E1C), // 초록색 텍스트
+                                      fontSize: 26,
+                                      fontFamily: 'Roboto',
+                                      fontWeight: FontWeight.w400,
+                                      height: 0.04,
+                                      letterSpacing: -0.52,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            TextSpan(
-                              text: '-405000 원',
-                              style: TextStyle(
-                                color: Color(0xFF676866),
-                                fontSize: 26,
-                                fontFamily: 'Roboto',
-                                fontWeight: FontWeight.w400,
-                                height: 0.04,
-                                letterSpacing: -0.52,
-                              ),
+                              textAlign: TextAlign.center,
                             ),
                           ],
+                        );
+                      }
+                      return Text(
+                        '오류 발생',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      );
+                    },
                   ),
                 ),
                 Padding(
@@ -261,25 +337,57 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 120,
                                 height: 100,
                                 child: TextButton(
-                                  onPressed: () {
-                                    print('입금금액 버튼 눌림');
+                                  onPressed: () async {
+                                    final plusResult = await Navigator.pushNamed(context, '/plus');
+                                    if (plusResult != null) {
+                                      setState(() {
+                                        _totalPlusAmount += int.tryParse(plusResult as String) ?? 0;
+                                      });
+                                    }
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shape: CircleBorder(),
-                                    padding: EdgeInsets.all(20),
+                                    padding: EdgeInsets.all(10),
                                   ),
-                                  child: Text(
-                                    '+450000',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w600,
-                                      height: 0.06,
-                                      letterSpacing: -0.36,
-                                    ),
+                                  child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasData && snapshot.data != null) {
+                                        final data = snapshot.data!.data();
+                                        final plusAccount = data?['plus_account'] ?? 0;
+                                        return FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '+$plusAccount 원',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1,
+                                              letterSpacing: -0.36,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        'Error',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -307,25 +415,57 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 120,
                                 height: 100,
                                 child: TextButton(
-                                  onPressed: () {
-                                    print('지출금액 버튼 눌림');
+                                  onPressed: () async {
+                                    final minusResult = await Navigator.pushNamed(context, '/minus');
+                                    if (minusResult != null) {
+                                      setState(() {
+                                        _totalMinusAmount += int.tryParse(minusResult as String) ?? 0;
+                                      });
+                                    }
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.transparent,
                                     shape: CircleBorder(),
-                                    padding: EdgeInsets.all(20),
+                                    padding: EdgeInsets.all(10),
                                   ),
-                                  child: Text(
-                                    '-855000',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 18,
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w600,
-                                      height: 0.06,
-                                      letterSpacing: -0.36,
-                                    ),
+                                  child: FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                                    future: FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(FirebaseAuth.instance.currentUser?.uid)
+                                        .get(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasData && snapshot.data != null) {
+                                        final data = snapshot.data!.data();
+                                        final minusAccount = data?['minus_account'] ?? 0;
+                                        return FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          child: Text(
+                                            '-$minusAccount 원',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 18,
+                                              fontFamily: 'Inter',
+                                              fontWeight: FontWeight.w600,
+                                              height: 1,
+                                              letterSpacing: -0.36,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return Text(
+                                        'Error',
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
@@ -366,11 +506,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         child: InkWell(
                           onTap: () {
-                            // 스크롤 애니메이션 실행
-                            _scrollController.animateTo(
-                              500, // 원하는 스크롤 위치
-                              duration: Duration(seconds: 1), // 스크롤 속도
-                              curve: Curves.ease, // 스크롤 애니메이션 커브
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PMLogScreen(), // 이동할 화면
+                              ),
                             );
                           },
                           child: Image.asset(
@@ -379,8 +519,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       )
-
-
                     ],
                   ),
                 ),
@@ -400,8 +538,13 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _selectedTab = label;
         });
-        Navigator.pushNamed(context, route); // 클릭 시 화면 이동
+
+        // /goal 경로일 때만 arguments 전달
+
+
+        Navigator.pushNamed(context, route);
       },
+
       child: Container(
         decoration: BoxDecoration(
           border: Border(
