@@ -36,7 +36,7 @@ String _getMonthName(int month) {
     '1월', '2월', '3월', '4월', '5월', '6월',
     '7월', '8월', '9월', '10월', '11월', '12월'
   ];
-  return monthNames[month - 2];
+  return monthNames[month-1];
 }
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedTab = '입출금';
@@ -202,7 +202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '${remainingAmount.toString()} ',
+                                  text: '${remainingAmount.toString().replaceAll('-', '')} ',
                                   style: TextStyle(
                                     color: remainingAmount >= 0
                                         ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
@@ -215,9 +215,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '원 남았어요!',
+                                  text: remainingAmount >= 0
+                                      ? '원 남았어요!'
+                                      : '원 초과했어요!',
                                   style: TextStyle(
-                                    color: Color(0xFF297E1C),
+                                    color: remainingAmount >= 0
+                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
+                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
                                     fontSize: 19,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,

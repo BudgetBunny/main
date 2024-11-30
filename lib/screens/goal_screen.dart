@@ -316,7 +316,7 @@ class _GoalScreenState extends State<GoalScreen> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        '현재 목표 금액',
+                        '목표 소비 금액',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       Text(
