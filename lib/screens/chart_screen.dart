@@ -226,22 +226,13 @@ class _ChartScreenState extends State<ChartScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
                 child: Container(
                   height: 350,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 2,
-                        blurRadius: 6,
-                        offset: Offset(0, 3),
-                      ),
-                    ],
                   ),
                   child: BarChart(
                     BarChartData(
@@ -304,7 +295,10 @@ class _ChartScreenState extends State<ChartScreen> {
                               ];
                               return SideTitleWidget(
                                 axisSide: meta.axisSide,
-                                child: Text(months[value.toInt() - 1]),
+                                child: Text(
+                                  months[value.toInt() - 1],
+                                  style: TextStyle(fontSize: 12), // 폰트 크기 작게 설정
+                                ),
                               );
                             },
                             reservedSize: 30,
@@ -316,7 +310,10 @@ class _ChartScreenState extends State<ChartScreen> {
                             reservedSize: 50,
                             getTitlesWidget: (value, meta) {
                               if (value % 100000 == 0) {
-                                return Text('${(value / 10000).toInt()}만원');
+                                return Text(
+                                  '${(value / 10000).toInt()}만원',
+                                  style: TextStyle(fontSize: 12), // 폰트 크기 조정
+                                );
                               }
                               return SizedBox.shrink();
                             },
