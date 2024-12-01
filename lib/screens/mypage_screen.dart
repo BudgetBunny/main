@@ -9,30 +9,29 @@ class MyPageScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 화면 크기 가져오기
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
       body: Container(
+        width: size.width, // 화면의 너비
+        height: size.height, // 화면의 높이
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage('assets/images/background_chart.png'), // 배경 이미지
-            fit: BoxFit.cover, // 화면 크기에 맞게 배경 이미지 적용
+            image: AssetImage('assets/images/mypage.png'),
+            fit: BoxFit.cover,
           ),
         ),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              // 상단 AppBar와 타이틀
               _buildAppBar(context, size),
               SizedBox(height: size.height * 0.02),
-              // 마이페이지 타이틀
               Text(
                 '마이페이지',
                 style: TextStyle(
                   fontSize: size.width * 0.06,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white, // 타이틀 글씨 색상 흰색
+                  color: Colors.white,
                 ),
               ),
               Divider(
@@ -43,11 +42,8 @@ class MyPageScreen extends StatelessWidget {
                 height: size.height * 0.05,
               ),
               SizedBox(height: size.height * 0.02),
-              // 프로필 아이콘 대체
               _buildProfileIcon(size),
               SizedBox(height: size.height * 0.03),
-
-              // Firestore에서 데이터 가져오기
               StreamBuilder<DocumentSnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('users')
@@ -72,19 +68,17 @@ class MyPageScreen extends StatelessWidget {
 
                   return Column(
                     children: [
-                      _buildInfoRow(context, size, '아이디', email), // 아이디 먼저 표시
+                      _buildInfoRow(context, size, '아이디', email),
                       SizedBox(height: size.height * 0.03),
                       _buildInfoRow(context, size, '닉네임', nickname, showResetButtons: true),
-                      SizedBox(height: size.height * 0.03),
+                      SizedBox(height: size.height * 0.01),
+                      _buildDeleteAccountButton(context, size), // 탈퇴 버튼 추가
                       SizedBox(height: size.height * 0.05),
                     ],
                   );
                 },
               ),
-              // 하단 마스코트 이미지
-              _buildMascot(size),
-              // 하단 추가 이미지
-              _buildUnderImage(size),
+
             ],
           ),
         ),
@@ -92,7 +86,6 @@ class MyPageScreen extends StatelessWidget {
     );
   }
 
-  // 상단 AppBar
   Widget _buildAppBar(BuildContext context, Size size) {
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -121,7 +114,7 @@ class MyPageScreen extends StatelessWidget {
           icon: Icon(Icons.menu, color: const Color(0xFF676966)),
           onSelected: (String choice) {
             if (choice == '홈 화면') {
-              Navigator.pushNamed(context, '/home'); // 홈 화면으로 이동
+              Navigator.pushNamed(context, '/home');
             } else if (choice == '로그아웃') {
               showDialog(
                 context: context,
@@ -130,13 +123,13 @@ class MyPageScreen extends StatelessWidget {
                   content: const Text('정말 로그아웃하시겠습니까?'),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context), // 팝업 닫기
+                      onPressed: () => Navigator.pop(context),
                       child: const Text('취소'),
                     ),
                     TextButton(
                       onPressed: () {
                         Navigator.pushNamedAndRemoveUntil(
-                            context, '/', (route) => false); // 로그아웃 후 메인으로 이동
+                            context, '/', (route) => false);
                       },
                       child: const Text('확인'),
                     ),
@@ -176,8 +169,8 @@ class MyPageScreen extends StatelessWidget {
     );
   }
 
-  // 정보 행 위젯
-  Widget _buildInfoRow(BuildContext context, Size size, String label, String value, {bool showResetButtons = false}) {
+  Widget _buildInfoRow(BuildContext context, Size size, String label, String value,
+      {bool showResetButtons = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
       child: Column(
@@ -198,7 +191,7 @@ class MyPageScreen extends StatelessWidget {
                 child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
                   child: TextField(
-                    enabled: false, // 텍스트 필드 클릭 비활성화
+                    enabled: false,
                     decoration: InputDecoration(
                       hintText: value,
                       hintStyle: TextStyle(
@@ -217,9 +210,8 @@ class MyPageScreen extends StatelessWidget {
               ),
             ],
           ),
-          // Reset 버튼을 표시할지 여부를 결정
           if (showResetButtons) ...[
-            SizedBox(height: size.height * 0.02), // 텍스트 필드와 버튼 사이의 간격
+            SizedBox(height: size.height * 0.02),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -249,7 +241,7 @@ class MyPageScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                SizedBox(width: size.width * 0.03), // 버튼 사이 간격
+                SizedBox(width: size.width * 0.03),
                 Expanded(
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -284,32 +276,88 @@ class MyPageScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMascot(Size size,
-      {double widthFactor = 1, double heightFactor = 0.5, double bottomSpacing = 0}) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: size.height * bottomSpacing), // 아래 간격 추가
-      child: Column(
-        children: [
-          Image.asset(
-            'assets/images/budget_bunny.png',
-            width: size.width * widthFactor,
-            height: size.width * heightFactor,
+  Widget _buildDeleteAccountButton(BuildContext context, Size size) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end, // Row 전체 오른쪽 정렬
+      children: [
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Color(0xffEB3232),
+            padding: EdgeInsets.all(7),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(size.width * 0.02),
+            ),
           ),
-        ],
-      ),
+          onPressed: () {
+            _showDeleteAccountDialog(context);
+          },
+          child: Text(
+            '탈퇴하기',
+            style: TextStyle(
+              fontSize: size.width * 0.04,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        SizedBox(width: 20),
+      ],
+
     );
   }
 
-  Widget _buildUnderImage(Size size,
-      {double widthFactor = 1.0, double heightFactor = 0.19, double topSpacing = 0}) {
-    return Padding(
-      padding: EdgeInsets.only(top: size.height * topSpacing), // 위 간격 추가
-      child: Image.asset(
-        'assets/images/mypage_under.png',
-        width: size.width * widthFactor,
-        height: size.height * heightFactor,
-        fit: BoxFit.contain,
-      ),
+  void _showDeleteAccountDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('계정 삭제'),
+          content: const Text('정말 계정을 삭제하시겠습니까?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // 팝업 닫기
+              },
+              child: const Text('뒤로'),
+            ),
+            TextButton(
+              onPressed: () async {
+                try {
+                  // 계정 삭제 로직
+                  await FirebaseAuth.instance.currentUser?.delete();
+
+                  // 계정 삭제 성공 시 첫 화면으로 이동
+                  Navigator.pushReplacementNamed(context, '/first');
+                } catch (error) {
+                  // 계정 삭제 실패 시 에러 처리
+                  Navigator.pop(context); // 팝업 닫기
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('계정 삭제에 실패했습니다: $error')),
+                  );
+                }
+              },
+              child: const Text('삭제하기'),
+            ),
+          ],
+        );
+      },
     );
   }
+
+
+  Future<void> _deleteAccount(BuildContext context) async {
+    try {
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+      await FirebaseFirestore.instance.collection('users').doc(uid).delete();
+      await FirebaseAuth.instance.currentUser!.delete();
+      Navigator.pushNamedAndRemoveUntil(context, '/first', (route) => false);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('계정을 삭제하는 중 오류가 발생했습니다: $e')),
+      );
+    }
+  }
+
+
+
+
 }
