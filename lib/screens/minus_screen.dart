@@ -97,13 +97,10 @@ class MinusScreen extends StatelessWidget {
       if (!snapshot.exists) {
         throw Exception("사용자의 데이터가 존재하지 않습니다.");
       } else {
-        final data = snapshot.data()!;
-        final currentBalance = data['account_balance'] ?? 0;
-        final currentMinusAccount = data['minus_account'] ?? 0;
-        if (currentBalance < amount) {
-          throw Exception("잔액이 부족합니다.");
-        }
+        final currentBalance = snapshot.data()?['account_balance'] ?? 0;
+        final currentMinusAccount = snapshot.data()?['minus_account'] ?? 0;
 
+        // 출금 금액에 제한을 두지 않음
         transaction.update(userDoc, {
           'account_balance': currentBalance - amount, // 총 금액 차감
           'minus_account': currentMinusAccount + amount, // 기존 지출 금액에 새 금액 추가
@@ -120,6 +117,7 @@ class MinusScreen extends StatelessWidget {
       });
     });
   }
+
 
   void _showErrorDialog(BuildContext context, String message) {
     showDialog(
