@@ -27,9 +27,9 @@ class _NicknameResetScreenState extends State<NicknameResetScreen> {
       return;
     }
 
-    if (_nicknameController.text.length < 3 || _nicknameController.text.length > 12) {
+    if (_nicknameController.text.length > 10) {
       setState(() {
-        _nicknameErrorMessage = "닉네임은 3~12자 사이여야 합니다.";
+        _nicknameErrorMessage = "닉네임은 10자 이하로 입력해주세요.";
       });
       return;
     }

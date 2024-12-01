@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
-import 'login_screen.dart'; // 로그인 화면 import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_screen.dart';
 
 class JoinScreen extends StatefulWidget {
   const JoinScreen({super.key});
@@ -17,9 +17,8 @@ class _JoinScreenState extends State<JoinScreen> {
   String _nicknameErrorMessage = "";
   String _idErrorMessage = "";
   String _passwordErrorMessage = "";
-  bool _isLoading = false; // 로딩 상태 추가
+  bool _isLoading = false;
 
-  // Firebase Auth 인스턴스
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -30,37 +29,57 @@ class _JoinScreenState extends State<JoinScreen> {
       _passwordErrorMessage = "";
     });
 
-    // 닉네임 검사
+    bool hasError = false;
+
+    // Nickname validation
     if (_nicknameController.text.isEmpty) {
       setState(() {
         _nicknameErrorMessage = "닉네임을 입력해주세요.";
       });
-      return;
+      hasError = true;
+    } else if (
+    _nicknameController.text.length > 10) {
+      setState(() {
+        _nicknameErrorMessage = "닉네임은 10자 이하로 입력해주세요.";
+      });
+      hasError = true;
     }
 
-    // 이메일 형식 검사
-    if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+    // Email format validation
+    if (_idController.text.isEmpty) {
+      setState(() {
+        _idErrorMessage = "아이디를 입력해주세요.";
+      });
+      hasError = true;
+    } else if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
         .hasMatch(_idController.text)) {
       setState(() {
         _idErrorMessage = "아이디는 이메일 형식이어야 합니다.";
       });
-      return;
+      hasError = true;
     }
 
-    // 비밀번호 검사
-    if (_passwordController.text.length < 8 ||
+    // Password validation
+    if (_passwordController.text.isEmpty) {
+      setState(() {
+        _passwordErrorMessage = "비밀번호를 입력해주세요.";
+      });
+      hasError = true;
+    } else if (_passwordController.text.length < 8 ||
         _passwordController.text.length > 16 ||
         !_passwordController.text.contains(RegExp(r'[A-Za-z]'))) {
       setState(() {
-        _passwordErrorMessage = "비밀번호는 8~16자의 영문 대/소문자.";
+        _passwordErrorMessage = "비밀번호는 8~16자의 영문 대/소문자를 포함해야 합니다.";
       });
-      return;
+      hasError = true;
     }
 
-    // Firebase에 회원가입 처리
+    // Stop if there are validation errors
+    if (hasError) return;
+
     try {
       setState(() {
-        _isLoading = true; // 로딩 상태 시작
+        _isLoading = true;
       });
 
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
@@ -68,22 +87,19 @@ class _JoinScreenState extends State<JoinScreen> {
         password: _passwordController.text,
       );
 
-      // Firestore에 닉네임 저장
       await _firestore.collection('users').doc(userCredential.user!.uid).set({
         'nickname': _nicknameController.text,
         'email': _idController.text,
       });
 
-      // 사용자 추가 데이터 (닉네임 등) Firebase Firestore나 Realtime Database에 저장 가능
-
       setState(() {
-        _isLoading = false; // 로딩 상태 종료
+        _isLoading = false;
       });
 
       _showSignUpCompleteDialog();
     } on FirebaseAuthException catch (e) {
       setState(() {
-        _isLoading = false; // 로딩 상태 종료
+        _isLoading = false;
       });
 
       String errorMessage;
@@ -110,11 +126,11 @@ class _JoinScreenState extends State<JoinScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // 다이얼로그 닫기
+              Navigator.pop(context);
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => const LoginScreen()),
-              ); // 로그인 화면으로 이동
+              );
             },
             child: const Text('확인'),
           ),
@@ -131,7 +147,7 @@ class _JoinScreenState extends State<JoinScreen> {
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
+            onPressed: () => Navigator.pop(context),
             child: const Text('확인'),
           ),
         ],
@@ -176,6 +192,7 @@ class _JoinScreenState extends State<JoinScreen> {
                     label: '닉네임',
                     controller: _nicknameController,
                     errorMessage: _nicknameErrorMessage,
+                    fieldWidth: size.width * 0.5,
                   ),
                   SizedBox(height: size.height * 0.03),
                   _buildTextFieldWithError(
@@ -232,10 +249,9 @@ class _JoinScreenState extends State<JoinScreen> {
         required TextEditingController controller,
         required String errorMessage,
         bool obscureText = false,
+        double? fieldWidth,
       }) {
     final size = MediaQuery.of(context).size;
-
-    final fieldWidth = size.width * 0.8;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +277,7 @@ class _JoinScreenState extends State<JoinScreen> {
           ),
         SizedBox(height: size.height * 0.01),
         SizedBox(
-          width: fieldWidth,
+          width: fieldWidth ?? size.width * 0.8,
           child: TextField(
             controller: controller,
             obscureText: obscureText,
