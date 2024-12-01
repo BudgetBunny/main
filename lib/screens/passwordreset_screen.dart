@@ -65,7 +65,10 @@ class _PasswordResetScreenState extends State<PasswordResetScreen> {
           content: const Text('비밀번호가 성공적으로 변경되었습니다.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                Navigator.pop(context); // 다이얼로그 닫기
+                Navigator.pop(context); // 마이페이지로 이동
+              },
               child: const Text('확인'),
             ),
           ],
