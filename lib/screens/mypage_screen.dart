@@ -72,11 +72,10 @@ class MyPageScreen extends StatelessWidget {
 
                   return Column(
                     children: [
-                      _buildInfoRow(context, size, '아이디', email, ''), // 아이디 먼저 표시
+                      _buildInfoRow(context, size, '아이디', email), // 아이디 먼저 표시
                       SizedBox(height: size.height * 0.03),
-                      _buildInfoRow(context, size, '닉네임', nickname, '닉네임 재설정'),
+                      _buildInfoRow(context, size, '닉네임', nickname, showResetButtons: true),
                       SizedBox(height: size.height * 0.03),
-                      _buildPasswordResetRow(context, size),
                       SizedBox(height: size.height * 0.05),
                     ],
                   );
@@ -178,107 +177,108 @@ class MyPageScreen extends StatelessWidget {
   }
 
   // 정보 행 위젯
-  Widget _buildInfoRow(BuildContext context, Size size, String label, String value,
-      String buttonText) {
+  Widget _buildInfoRow(BuildContext context, Size size, String label, String value, {bool showResetButtons = false}) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: size.width * 0.045,
-              fontWeight: FontWeight.bold,
-              color: Colors.black,
-            ),
-          ),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
-              child: TextField(
-                enabled: false, // 텍스트 필드 클릭 비활성화
-                decoration: InputDecoration(
-                  hintText: value,
-                  hintStyle: TextStyle(
-                      color: Colors.black45, fontSize: size.width * 0.04),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(size.width * 0.02),
-                  ),
-                  contentPadding: EdgeInsets.symmetric(
-                      vertical: size.height * 0.015),
-                ),
-              ),
-            ),
-          ),
-          if (buttonText.isNotEmpty)
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF20DCC0),
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(size.width * 0.02),
-                ),
-              ),
-              onPressed: () {
-                if (label == '닉네임') {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NicknameResetScreen(),
-                    ),
-                  );
-                }
-              },
-              child: Text(
-                buttonText,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
                 style: TextStyle(
-                  fontSize: size.width * 0.04,
-                  color: Colors.white,
+                  fontSize: size.width * 0.045,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
                 ),
               ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPasswordResetRow(BuildContext context, Size size) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.045),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
-              child: const SizedBox(),
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF20DCC0),
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.025),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(size.width * 0.02),
-              ),
-            ),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const PasswordResetScreen(),
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
+                  child: TextField(
+                    enabled: false, // 텍스트 필드 클릭 비활성화
+                    decoration: InputDecoration(
+                      hintText: value,
+                      hintStyle: TextStyle(
+                        color: Colors.black45,
+                        fontSize: size.width * 0.04,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(size.width * 0.02),
+                      ),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: size.height * 0.015,
+                      ),
+                    ),
+                  ),
                 ),
-              );
-            },
-            child: Text(
-              '비밀번호 재설정',
-              style: TextStyle(
-                fontSize: size.width * 0.04,
-                color: Colors.white,
               ),
-            ),
+            ],
           ),
+          // Reset 버튼을 표시할지 여부를 결정
+          if (showResetButtons) ...[
+            SizedBox(height: size.height * 0.02), // 텍스트 필드와 버튼 사이의 간격
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF20DCC0),
+                      padding: EdgeInsets.symmetric(vertical: size.height * 0.015),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(size.width * 0.02),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NicknameResetScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '닉네임 재설정',
+                      style: TextStyle(
+                        fontSize: size.width * 0.04,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: size.width * 0.03), // 버튼 사이 간격
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF20DCC0),
+                      padding: EdgeInsets.symmetric(vertical: size.height * 0.015),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(size.width * 0.02),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PasswordResetScreen(),
+                        ),
+                      );
+                    },
+                    child: Text(
+                      '비밀번호 재설정',
+                      style: TextStyle(
+                        fontSize: size.width * 0.04,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

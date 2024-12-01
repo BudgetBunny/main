@@ -10,7 +10,6 @@ import 'PMLog_screen.dart';
 
 
 class MyApp extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -158,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '이번달 목표 금액 ',
+                                  text: '이번달 목표 소비 ',
                                   style: TextStyle(
                                     color: Color(0xFF297E1C),
                                     fontSize: 18,
@@ -169,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '${goalAmount.toString()} ',
+                                  text: '${goalAmount.toString()}',
                                   style: TextStyle(
                                     color: Color(0xFF586556),
                                     fontSize: 20,
@@ -191,7 +190,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: ' 까지\n',
+                                  text: remainingAmount >= 0
+                                      ? '까지\n'
+                                      : '에서\n',
                                   style: TextStyle(
                                     color: Color(0xFF297E1C),
                                     fontSize: 18,
@@ -202,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                 ),
                                 TextSpan(
-                                  text: '${remainingAmount.toString().replaceAll('-', '')} ',
+                                  text: '${remainingAmount.toString().replaceAll('-', '')}',
                                   style: TextStyle(
                                     color: remainingAmount >= 0
                                         ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
