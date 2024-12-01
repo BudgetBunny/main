@@ -243,6 +243,7 @@ class _ChartScreenState extends State<ChartScreen> {
                         maxY: [
                           if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
                           if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                          0
                         ].reduce((a, b) => a > b ? a : b) * 1.2, // 20% 여유 추가
                         barGroups: List.generate(12, (index) {
                           final month = index + 1;
@@ -288,6 +289,7 @@ class _ChartScreenState extends State<ChartScreen> {
                                 final maxY = [
                                   if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
                                   if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                                  0
                                 ].reduce((a, b) => a > b ? a : b) * 1.2;
 
                                 if (value == maxY) {
