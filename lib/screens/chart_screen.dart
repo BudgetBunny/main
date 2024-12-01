@@ -234,111 +234,128 @@ class _ChartScreenState extends State<ChartScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: BarChart(
-                    BarChartData(
-                      alignment: BarChartAlignment.spaceAround,
-                      maxY: monthlyWithdrawals.values.isNotEmpty
-                          ? (monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b) * 1.2)
-                          : 1000000,
-                      barGroups: List.generate(12, (index) {
-                        final month = index + 1;
-                        return BarChartGroupData(
-                          x: month,
-                          barRods: [
-                            BarChartRodData(
-                              toY: monthlyDeposits[month] ?? 0,
-                              gradient: LinearGradient(
-                                colors: [Colors.blue, Colors.lightBlueAccent],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                              width: 7,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                            ),
-                            BarChartRodData(
-                              toY: monthlyWithdrawals[month] ?? 0,
-                              gradient: LinearGradient(
-                                colors: [Colors.red, Colors.orangeAccent],
-                                begin: Alignment.bottomCenter,
-                                end: Alignment.topCenter,
-                              ),
-                              width: 7,
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
-                            ),
-                          ],
-                        );
-                      }),
-                      titlesData: FlTitlesData(
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
-                        ),
-                        bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            getTitlesWidget: (value, meta) {
-                              final months = [
-                                '1월',
-                                '2월',
-                                '3월',
-                                '4월',
-                                '5월',
-                                '6월',
-                                '7월',
-                                '8월',
-                                '9월',
-                                '10월',
-                                '11월',
-                                '12월'
-                              ];
-                              return SideTitleWidget(
-                                axisSide: meta.axisSide,
-                                child: Text(
-                                  months[value.toInt() - 1],
-                                  style: TextStyle(fontSize: 12), // 폰트 크기 작게 설정
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        // maxY 값을 deposits와 withdrawals의 최대값 중 큰 값에 적절한 여유를 두고 설정
+                        maxY: [
+                          if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
+                          if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                        ].reduce((a, b) => a > b ? a : b) * 1.2, // 20% 여유 추가
+                        barGroups: List.generate(12, (index) {
+                          final month = index + 1;
+                          return BarChartGroupData(
+                            x: month,
+                            barRods: [
+                              BarChartRodData(
+                                toY: monthlyDeposits[month] ?? 0,
+                                gradient: LinearGradient(
+                                  colors: [Colors.blue, Colors.lightBlueAccent],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
                                 ),
-                              );
-                            },
-                            reservedSize: 30,
-                          ),
-                        ),
-                        leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            getTitlesWidget: (value, meta) {
-                              if (value % 100000 == 0) {
-                                return Text(
-                                  '${(value / 10000).toInt()}만원',
-                                  style: TextStyle(fontSize: 12), // 폰트 크기 조정
-                                );
-                              }
-                              return SizedBox.shrink();
-                            },
-                          ),
-                        ),
-                      ),
-                      gridData: FlGridData(
-                        show: true,
-                        drawHorizontalLine: true,
-                        horizontalInterval: 100000,
-                        getDrawingHorizontalLine: (value) {
-                          return FlLine(
-                            color: Colors.grey.withOpacity(0.3),
-                            strokeWidth: 1,
+                                width: 7,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                              ),
+                              BarChartRodData(
+                                toY: monthlyWithdrawals[month] ?? 0,
+                                gradient: LinearGradient(
+                                  colors: [Colors.red, Colors.orangeAccent],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                                width: 7,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                              ),
+                            ],
                           );
-                        },
-                      ),
-                      borderData: FlBorderData(
-                        show: true,
-                        border: Border.all(
-                          color: Colors.grey.withOpacity(0.5),
+                        }),
+                        titlesData: FlTitlesData(
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // 오른쪽 단위 표시 제거
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // 위쪽 단위 표시 제거
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 50,
+                              getTitlesWidget: (value, meta) {
+                                // 투명 글자 처리
+                                final maxY = [
+                                  if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
+                                  if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                                ].reduce((a, b) => a > b ? a : b) * 1.2;
+
+                                if (value == maxY) {
+                                  return Text(
+                                    '${(value / 10000).toInt()}만원',
+                                    style: TextStyle(fontSize: 10, color: Colors.transparent), // 투명 처리
+                                  );
+                                } else if (value % 10000 == 0) {
+                                  return Text(
+                                    '${(value / 10000).toInt()}만원', // 정상 표시
+                                    style: TextStyle(fontSize: 10),
+                                  );
+                                }
+                                return SizedBox.shrink();
+                              },
+                            ),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final months = [
+                                  '1월',
+                                  '2월',
+                                  '3월',
+                                  '4월',
+                                  '5월',
+                                  '6월',
+                                  '7월',
+                                  '8월',
+                                  '9월',
+                                  '10월',
+                                  '11월',
+                                  '12월'
+                                ];
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  child: Text(
+                                    months[value.toInt() - 1],
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                );
+                              },
+                              reservedSize: 30,
+                            ),
+                          ),
+                        ),
+                        gridData: FlGridData(
+                          show: true,
+                          drawHorizontalLine: true,
+                          horizontalInterval: 10000, // 1만원 단위로 설정
+                          getDrawingHorizontalLine: (value) {
+                            return FlLine(
+                              color: Colors.white.withOpacity(0.3),
+                              strokeWidth: 1,
+                            );
+                          },
+                        ),
+                        borderData: FlBorderData(
+                          show: true,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                  )
+
                 ),
               ),
             ],
