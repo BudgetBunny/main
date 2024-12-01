@@ -6,8 +6,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'home_screen.dart';
 import 'goal_screen.dart';
 
-
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -22,6 +20,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class ChartScreen extends StatefulWidget {
   @override
   _ChartScreenState createState() => _ChartScreenState();
@@ -32,12 +31,14 @@ class _ChartScreenState extends State<ChartScreen> {
   DateTime? _selectedDay;
   String _selectedTab = '통계';
 
+  Map<int, double> monthlyDeposits = {};
+  Map<int, double> monthlyWithdrawals = {};
   Map<DateTime, Map<String, double>> transactions = {};
 
   @override
   void initState() {
     super.initState();
-    _loadTransactions();  // 앱 시작 시 거래 데이터 불러오기
+    _loadTransactions();
   }
 
   Future<void> _loadTransactions() async {
@@ -49,6 +50,8 @@ class _ChartScreenState extends State<ChartScreen> {
         .where('userId', isEqualTo: user.uid)
         .get();
 
+    Map<int, double> deposits = {};
+    Map<int, double> withdrawals = {};
     final Map<DateTime, Map<String, double>> tempTransactions = {};
 
     for (var doc in transactionsQuerySnapshot.docs) {
@@ -56,22 +59,30 @@ class _ChartScreenState extends State<ChartScreen> {
       final timestamp = (data['timestamp'] as Timestamp).toDate();
       final amount = data['amount']?.toDouble() ?? 0.0;
       final type = data['type'];
+      final month = timestamp.month;
+      final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
 
-      if (type == 'deposit' || type == 'withdrawal') {
-        final date = DateTime(timestamp.year, timestamp.month, timestamp.day);
+      if (type == 'deposit') {
+        deposits[month] = (deposits[month] ?? 0) + amount;
         if (!tempTransactions.containsKey(date)) {
           tempTransactions[date] = {'deposit': 0.0, 'withdrawal': 0.0};
         }
-        if (type == 'deposit') {
-          tempTransactions[date]!['deposit'] = (tempTransactions[date]!['deposit'] ?? 0.0) + amount;
-        } else if (type == 'withdrawal') {
-          tempTransactions[date]!['withdrawal'] = (tempTransactions[date]!['withdrawal'] ?? 0.0) + amount;
+        tempTransactions[date]!['deposit'] =
+            (tempTransactions[date]!['deposit'] ?? 0.0) + amount;
+      } else if (type == 'withdrawal') {
+        withdrawals[month] = (withdrawals[month] ?? 0) + amount;
+        if (!tempTransactions.containsKey(date)) {
+          tempTransactions[date] = {'deposit': 0.0, 'withdrawal': 0.0};
         }
+        tempTransactions[date]!['withdrawal'] =
+            (tempTransactions[date]!['withdrawal'] ?? 0.0) + amount;
       }
     }
 
     setState(() {
-      transactions = tempTransactions;  // 거래 데이터를 상태에 업데이트
+      monthlyDeposits = deposits;
+      monthlyWithdrawals = withdrawals;
+      transactions = tempTransactions;
     });
   }
 
@@ -116,7 +127,7 @@ class _ChartScreenState extends State<ChartScreen> {
                     icon: Icon(Icons.menu, color: Color(0xFF676966)),
                     onSelected: (String choice) {
                       if (choice == '마이페이지') {
-                        Navigator.pushNamed(context, '/mypage'); // 마이페이지로 이동
+                        Navigator.pushNamed(context, '/mypage');
                       } else if (choice == '로그아웃') {
                         showDialog(
                           context: context,
@@ -125,13 +136,13 @@ class _ChartScreenState extends State<ChartScreen> {
                             content: Text('정말 로그아웃하시겠습니까?'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
+                                onPressed: () => Navigator.pop(context),
                                 child: Text('취소'),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushNamedAndRemoveUntil(
-                                      context, '/', (route) => false); // 로그아웃 후 메인 화면으로 이동
+                                      context, '/', (route) => false);
                                 },
                                 child: Text('확인'),
                               ),
@@ -157,13 +168,12 @@ class _ChartScreenState extends State<ChartScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildTabItem('통계', '/chart'),
-                    _buildTabItem('입출금', '/home'), // 입출금 화면으로 연결
+                    _buildTabItem('입출금', '/home'),
                     _buildTabItem('관리', '/goal'),
                   ],
                 ),
               ),
               SizedBox(height: 20),
-              // 캘린더
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                 decoration: BoxDecoration(
@@ -192,120 +202,162 @@ class _ChartScreenState extends State<ChartScreen> {
                       color: Colors.green,
                       shape: BoxShape.circle,
                     ),
-                    defaultTextStyle: TextStyle(color: Colors.black),
                   ),
                   calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, date, focusedDay) {
-                      var transaction = transactions[_stripTime(date)];
-                      String deposit = transaction != null
-                          ? '+${transaction['deposit']?.toInt() ?? 0}'
-                          : '';
-                      String withdrawal  = transaction != null
-                          ? '-${transaction['withdrawal']?.toInt() ?? 0}'
-                          : '';
+                    defaultBuilder: (context, date, _) {
+                      final transaction = transactions[_stripTime(date)];
+                      final deposit = transaction?['deposit']?.toInt() ?? 0;
+                      final withdrawal = transaction?['withdrawal']?.toInt() ?? 0;
 
                       return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(height: 13),
-                              Text(
-                                date.day.toString(),
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                          Text(
+                            date.day.toString(),
+                            style: TextStyle(fontSize: 11),
                           ),
-                          Column(
-                            children: [
-                              if (deposit.isNotEmpty)
-                                Text(
-                                  deposit,
-                                  style: TextStyle(fontSize: 8, color: Colors.blue),
-                                ),
-                              if (withdrawal .isNotEmpty)
-                                Text(
-                                  withdrawal ,
-                                  style: TextStyle(fontSize: 8, color: Colors.red),
-                                ),
-                            ],
-                          ),
+                          if (deposit > 0)
+                            Text('+${deposit}', style: TextStyle(fontSize: 8, color: Colors.blue)),
+                          if (withdrawal > 0)
+                            Text('-${withdrawal}', style: TextStyle(fontSize: 8, color: Colors.red)),
                         ],
                       );
                     },
                   ),
                 ),
               ),
-              SizedBox(height: 20),
-              // LineChart 그래프
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
                 child: Container(
-                  height: 300,
-                  child: LineChart(
-                    LineChartData(
-                      gridData: FlGridData(show: true),
-                      titlesData: FlTitlesData(
-                        show: true,
-                        topTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+                  height: 350,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: BarChart(
+                      BarChartData(
+                        alignment: BarChartAlignment.spaceAround,
+                        // maxY 값을 deposits와 withdrawals의 최대값 중 큰 값에 적절한 여유를 두고 설정
+                        maxY: [
+                          if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
+                          if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                          0
+                        ].reduce((a, b) => a > b ? a : b) * 1.2, // 20% 여유 추가
+                        barGroups: List.generate(12, (index) {
+                          final month = index + 1;
+                          return BarChartGroupData(
+                            x: month,
+                            barRods: [
+                              BarChartRodData(
+                                toY: monthlyDeposits[month] ?? 0,
+                                gradient: LinearGradient(
+                                  colors: [Colors.blue, Colors.lightBlueAccent],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                                width: 7,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                              ),
+                              BarChartRodData(
+                                toY: monthlyWithdrawals[month] ?? 0,
+                                gradient: LinearGradient(
+                                  colors: [Colors.red, Colors.orangeAccent],
+                                  begin: Alignment.bottomCenter,
+                                  end: Alignment.topCenter,
+                                ),
+                                width: 7,
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
+                              ),
+                            ],
+                          );
+                        }),
+                        titlesData: FlTitlesData(
+                          rightTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // 오른쪽 단위 표시 제거
+                          ),
+                          topTitles: AxisTitles(
+                            sideTitles: SideTitles(showTitles: false), // 위쪽 단위 표시 제거
+                          ),
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 50,
+                              getTitlesWidget: (value, meta) {
+                                // 투명 글자 처리
+                                final maxY = [
+                                  if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
+                                  if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
+                                  0
+                                ].reduce((a, b) => a > b ? a : b) * 1.2;
+
+                                if (value == maxY) {
+                                  return Text(
+                                    '${(value / 10000).toInt()}만원',
+                                    style: TextStyle(fontSize: 10, color: Colors.transparent), // 투명 처리
+                                  );
+                                } else if (value % 10000 == 0) {
+                                  return Text(
+                                    '${(value / 10000).toInt()}만원', // 정상 표시
+                                    style: TextStyle(fontSize: 10),
+                                  );
+                                }
+                                return SizedBox.shrink();
+                              },
+                            ),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              getTitlesWidget: (value, meta) {
+                                final months = [
+                                  '1월',
+                                  '2월',
+                                  '3월',
+                                  '4월',
+                                  '5월',
+                                  '6월',
+                                  '7월',
+                                  '8월',
+                                  '9월',
+                                  '10월',
+                                  '11월',
+                                  '12월'
+                                ];
+                                return SideTitleWidget(
+                                  axisSide: meta.axisSide,
+                                  child: Text(
+                                    months[value.toInt() - 1],
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                );
+                              },
+                              reservedSize: 30,
+                            ),
+                          ),
                         ),
-                        rightTitles: AxisTitles(
-                          sideTitles: SideTitles(showTitles: false),
+                        gridData: FlGridData(
+                          show: true,
+                          drawHorizontalLine: true,
+                          horizontalInterval: 10000, // 1만원 단위로 설정
+                          getDrawingHorizontalLine: (value) {
+                            return FlLine(
+                              color: Colors.white.withOpacity(0.3),
+                              strokeWidth: 1,
+                            );
+                          },
+                        ),
+                        borderData: FlBorderData(
+                          show: true,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                          ),
                         ),
                       ),
-                      borderData: FlBorderData(show: true),
-                      minX: 1,
-                      maxX: 12,
-                      minY: 0,
-                      maxY: 100,
-                      lineBarsData: [
-                        LineChartBarData(
-                          spots: [
-                            FlSpot(1, 50),
-                            FlSpot(2, 60),
-                            FlSpot(3, 60),
-                            FlSpot(4, 50),
-                            FlSpot(5, 55),
-                            FlSpot(6, 60),
-                            FlSpot(7, 45),
-                            FlSpot(8, 75),
-                            FlSpot(9, 50),
-                            FlSpot(10, 55),
-                            FlSpot(11, 45),
-                            FlSpot(12, 50),
-                          ],
-                          isCurved: true,
-                          color: Colors.blue,
-                          dotData: FlDotData(show: false),
-                          belowBarData: BarAreaData(show: false),
-                        ),
-                        LineChartBarData(
-                          spots: [
-                            FlSpot(1, 40),
-                            FlSpot(2, 45),
-                            FlSpot(3, 55),
-                            FlSpot(4, 35),
-                            FlSpot(5, 40),
-                            FlSpot(6, 40),
-                            FlSpot(7, 60),
-                            FlSpot(8, 50),
-                            FlSpot(9, 65),
-                            FlSpot(10, 40),
-                            FlSpot(11, 45),
-                            FlSpot(12, 55),
-                          ],
-                          isCurved: true,
-                          color: Colors.red,
-                          dotData: FlDotData(show: false),
-                          belowBarData: BarAreaData(show: false),
-                        ),
-                      ],
                     ),
-                  ),
+                  )
+
                 ),
               ),
             ],
@@ -320,13 +372,13 @@ class _ChartScreenState extends State<ChartScreen> {
   }
 
   Widget _buildTabItem(String label, String route) {
-    bool isSelected = _selectedTab == label;
+    final isSelected = _selectedTab == label;
     return GestureDetector(
       onTap: () {
         setState(() {
           _selectedTab = label;
         });
-        Navigator.pushNamed(context, route); // 클릭 시 화면 이동
+        Navigator.pushNamed(context, route);
       },
       child: Container(
         decoration: BoxDecoration(

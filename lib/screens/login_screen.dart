@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // Firebase Auth import
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'join_screen.dart'; // 회원가입 화면 import
 
 void main() {
@@ -50,8 +51,22 @@ class _LoginScreenState extends State<LoginScreen> {
           email: id,
           password: password,
         );
-        // 로그인 성공
-        _showSuccessDialog(userCredential.user?.email ?? "사용자");
+
+        String uid = userCredential.user!.uid;
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(uid)
+            .get();
+
+        if (userDoc.exists) {
+          String nickname = userDoc['nickname'];
+          _showSuccessDialog(nickname); // 닉네임으로 성공 다이얼로그 호출
+        } else {
+          setState(() {
+            _errorMessage = "사용자 데이터를 찾을 수 없습니다.";
+          });
+        }
+      } on FirebaseAuthException catch (e) {
       } on FirebaseAuthException catch (e) {
         // Firebase 인증 에러 처리
         if (e.code == 'user-not-found') {
@@ -71,12 +86,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _showSuccessDialog(String userId) {
+  void _showSuccessDialog(String nickname) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('로그인 성공'),
-        content: Text('환영합니다, $userId님!'),
+        content: Text('환영합니다, $nickname 님!'),
         actions: [
           TextButton(
             onPressed: () {
