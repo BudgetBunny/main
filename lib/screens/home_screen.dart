@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '이번달 목표 금액 ',
+                                  text: '이번달 목표 소비 ',
                                   style: TextStyle(
                                     color: Color(0xFF297E1C),
                                     fontSize: 18,
