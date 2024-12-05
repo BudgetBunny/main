@@ -72,7 +72,7 @@ class MyPageScreen extends StatelessWidget {
                       SizedBox(height: size.height * 0.03),
                       _buildInfoRow(context, size, '닉네임', nickname, showResetButtons: true),
                       SizedBox(height: size.height * 0.01),
-                      _buildDeleteAccountButton(context, size), // 탈퇴 버튼 추가
+                      _buildDeleteAccountButton(context, size), // 탈퇴 버튼
                       SizedBox(height: size.height * 0.05),
                     ],
                   );

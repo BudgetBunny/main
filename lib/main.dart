@@ -9,7 +9,7 @@ import 'screens/mypage_screen.dart';
 import 'screens/passwordreset_screen.dart';
 import 'screens/plus_screen.dart';
 import 'screens/minus_screen.dart';
-import 'screens/first_screen.dart'; // FirstScreen import 추가
+import 'screens/first_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/first', // 첫 화면을 FirstScreen으로 설정
       routes: {
-        '/first': (context) => FirstScreen(), // FirstScreen 추가
+        '/first': (context) => FirstScreen(), // 처음에 잠깐 나오는 화면
         '/': (context) => LoginScreen(),
         '/home': (context) => HomeScreen(),
         '/chart': (context) => ChartScreen(),

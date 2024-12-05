@@ -239,7 +239,7 @@ class _ChartScreenState extends State<ChartScreen> {
                     child: BarChart(
                       BarChartData(
                         alignment: BarChartAlignment.spaceAround,
-                        // maxY 값을 deposits와 withdrawals의 최대값 중 큰 값에 적절한 여유를 두고 설정
+
                         maxY: [
                           if (monthlyDeposits.isNotEmpty) monthlyDeposits.values.reduce((a, b) => a > b ? a : b),
                           if (monthlyWithdrawals.isNotEmpty) monthlyWithdrawals.values.reduce((a, b) => a > b ? a : b),
@@ -340,7 +340,7 @@ class _ChartScreenState extends State<ChartScreen> {
                         gridData: FlGridData(
                           show: true,
                           drawHorizontalLine: true,
-                          horizontalInterval: 10000, // 1만원 단위로 설정
+                          horizontalInterval: 10000, // 목표금액 단위 만원 단위로 설정
                           getDrawingHorizontalLine: (value) {
                             return FlLine(
                               color: Colors.white.withOpacity(0.3),

@@ -56,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fit: BoxFit.fitHeight,
               ),
             ),
-            // 주요 UI
+            //  UI
             Column(
               children: [
 
@@ -74,9 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 0.06,
                       shadows: [
                         Shadow(
-                          offset: Offset(0, 3.5), // 그림자의 x, y 위치
-                          blurRadius: 5.0,          // 그림자의 흐림 정도
-                          color: Colors.black38,    // 그림자의 색상
+                          offset: Offset(0, 3.5),
+                          blurRadius: 5.0,
+                          color: Colors.black38,
                         ),
                       ],
                     ),
@@ -129,7 +129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       _buildTabItem('통계', '/chart'),
-                      _buildTabItem('입출금', '/home'), // 입출금 화면으로 연결
+                      _buildTabItem('입출금', '/home'),
                       _buildTabItem('관리', '/goal'),
                     ],
                   ),
@@ -206,8 +206,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                   text: '${remainingAmount.toString().replaceAll('-', '')}',
                                   style: TextStyle(
                                     color: remainingAmount >= 0
-                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
-                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
+                                        ? Color(0xFF297E1C) // 초록색
+                                        : Color(0xFFD35656), // 빨간색
                                     fontSize: 19,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w700,
@@ -221,8 +221,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                       : '원 초과했어요!',
                                   style: TextStyle(
                                     color: remainingAmount >= 0
-                                        ? Color(0xFF297E1C) // 남은 금액이 양수일 경우 초록색
-                                        : Color(0xFFD35656), // 남은 금액이 음수일 경우 빨간색
+                                        ? Color(0xFF297E1C) // 초록색
+                                        : Color(0xFFD35656), // 빨간색
                                     fontSize: 19,
                                     fontFamily: 'Inter',
                                     fontWeight: FontWeight.w500,
@@ -479,7 +479,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Spacer(), // 화면 하단으로 버튼 배치
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20.0), // 하단 간격 조정
+                  padding: const EdgeInsets.only(bottom: 20.0), // 하단 간격
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         width: 60,
                         height: 60,
-                        padding: EdgeInsets.all(10), // 이미지 크기를 키우기 위한 패딩
+                        padding: EdgeInsets.all(10),
                         clipBehavior: Clip.antiAlias,
                         decoration: ShapeDecoration(
                           shape: CircleBorder(),
@@ -515,8 +515,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           child: Image.asset(
-                            'assets/icons/downBT.png', // 이미지 파일 경로
-                            fit: BoxFit.cover, // 이미지가 버튼 크기에 맞게 꽉 차도록 설정
+                            'assets/icons/downBT.png',
+                            fit: BoxFit.cover, // 이미지가 버튼 크기에 딱 맞게
                           ),
                         ),
                       )
@@ -540,7 +540,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _selectedTab = label;
         });
 
-        // /goal 경로일 때만 arguments 전달
 
 
         Navigator.pushNamed(context, route);
