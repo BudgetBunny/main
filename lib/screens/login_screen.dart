@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'join_screen.dart'; // 회원가입 화면 import
+import 'join_screen.dart';
 
 void main() {
   runApp(const LoginApp());
@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _passwordController = TextEditingController();
   String _errorMessage = "";
 
-  final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase Auth 인스턴스
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   void _login() async {
     String id = _idController.text.trim();
@@ -60,15 +60,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (userDoc.exists) {
           String nickname = userDoc['nickname'];
-          _showSuccessDialog(nickname); // 닉네임으로 성공 다이얼로그 호출
+          _showSuccessDialog(nickname);
         } else {
           setState(() {
             _errorMessage = "사용자 데이터를 찾을 수 없습니다.";
           });
         }
       } on FirebaseAuthException catch (e) {
-      } on FirebaseAuthException catch (e) {
-        // Firebase 인증 에러 처리
         if (e.code == 'user-not-found') {
           setState(() {
             _errorMessage = "존재하지 않는 사용자입니다.";
@@ -95,8 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context); // 팝업 닫기
-              // 홈 화면으로 이동 (이곳에 실제 홈 화면을 연결해야 함)
+              Navigator.pop(context);
               Navigator.pushReplacementNamed(context, '/home');
             },
             child: const Text('확인'),
@@ -109,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void _goToSignUp() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const JoinScreen()), // 회원가입 페이지로 이동
+      MaterialPageRoute(builder: (context) => const JoinScreen()),
     );
   }
 
@@ -150,11 +147,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: size.height * 0.03),
                   _buildLabel('비밀번호', size),
                   _buildTextField(size, controller: _passwordController, obscureText: true),
-                  // 간격 추가
-                  SizedBox(height: size.height * 0.06),
+                  SizedBox(height: size.height * 0.03),
                   if (_errorMessage.isNotEmpty)
                     Padding(
-                      padding: EdgeInsets.symmetric(vertical: size.height * 0.02),
+                      padding: EdgeInsets.symmetric(vertical: size.height * 0.01),
                       child: Center(
                         child: Text(
                           _errorMessage,

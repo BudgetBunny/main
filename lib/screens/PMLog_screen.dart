@@ -28,8 +28,8 @@ class PMLogScreen extends StatefulWidget {
 class _PMLogState extends State<PMLogScreen> {
   String _backgroundImage = 'assets/images/background_log.png'; // 초기 배경 이미지
   List<Map<String, dynamic>> _transactions = [];
-  String _selectedFilter = '전체'; // 필터 상태
-  String _selectedTab = '입출금'; // 탭 상태
+  String _selectedFilter = '전체'; // 필터 기본값
+  String _selectedTab = '입출금'; // 탭 기본값
 
   @override
   void initState() {
@@ -65,11 +65,11 @@ class _PMLogState extends State<PMLogScreen> {
         }
 
         return {
-          'amount': data['amount'] ?? 0, // null이면 0으로 처리
-          'type': data['type'] ?? 'unknown', // null이면 'unknown'으로 처리
+          'amount': data['amount'] ?? 0, // null이면 0
+          'type': data['type'] ?? 'unknown', // null이면 unknown
           'timestamp': (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(), // null이면 현재 시간
         };
-      }).toList().cast<Map<String, dynamic>>(); // List<Map<dynamic, dynamic>>를 List<Map<String, dynamic>>로 캐스팅
+      }).toList().cast<Map<String, dynamic>>();
     });
   }
 
@@ -130,7 +130,7 @@ class _PMLogState extends State<PMLogScreen> {
                     icon: Icon(Icons.menu, color: Color(0xFF676966)),
                     onSelected: (String choice) {
                       if (choice == '마이페이지') {
-                        Navigator.pushNamed(context, '/mypage'); // 마이페이지로 이동
+                        Navigator.pushNamed(context, '/mypage');
                       } else if (choice == '로그아웃') {
                         showDialog(
                           context: context,
@@ -139,13 +139,13 @@ class _PMLogState extends State<PMLogScreen> {
                             content: Text('정말 로그아웃하시겠습니까?'),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context), // 다이얼로그 닫기
+                                onPressed: () => Navigator.pop(context),
                                 child: Text('취소'),
                               ),
                               TextButton(
                                 onPressed: () {
                                   Navigator.pushNamedAndRemoveUntil(
-                                      context, '/', (route) => false); // 로그아웃 후 메인 화면으로 이동
+                                      context, '/', (route) => false); // 로그아웃
                                 },
                                 child: Text('확인'),
                               ),
@@ -171,7 +171,7 @@ class _PMLogState extends State<PMLogScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
                     _buildTabItem('통계', '/chart'),
-                    _buildTabItem('입출금', '/home'), // 입출금 화면으로 연결
+                    _buildTabItem('입출금', '/home'),
                     _buildTabItem('관리', '/goal'),
                   ],
                 ),
@@ -182,7 +182,7 @@ class _PMLogState extends State<PMLogScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.only(left: 20.0),  // 왼쪽에 여백 추가
+                      padding: const EdgeInsets.only(left: 20.0),
                       child: _buildFilterButton('전체'),
                     ),
                     SizedBox(width: 10.0),
@@ -223,7 +223,7 @@ class _PMLogState extends State<PMLogScreen> {
         setState(() {
           _selectedFilter = filter;
         });
-        _fetchTransactions(); // 필터에 따라 데이터 다시 로드
+        _fetchTransactions(); // 필터 기능
       },
       child: Container(
         decoration: BoxDecoration(
